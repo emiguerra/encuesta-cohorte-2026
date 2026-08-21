@@ -7,6 +7,8 @@
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/editor.css">
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js" defer></script>
 </head>
 <body>
 
@@ -27,7 +29,8 @@
     <button id="btn-save-json" class="ed-btn">Guardar progreso</button>
     <button id="btn-load-json" class="ed-btn">Cargar progreso</button>
     <button id="btn-export-png" class="ed-btn">PNG del slide</button>
-    <button id="btn-export-html" class="ed-btn primary">Exportar sitio HTML</button>
+    <button id="btn-export-pdf" class="ed-btn primary">Exportar PDF</button>
+    <button id="btn-export-pptx" class="ed-btn primary">Exportar PPTX</button>
     <input type="file" id="file-load-json" accept="application/json" class="ed-file-input">
   </div>
 </header>
@@ -126,7 +129,7 @@
         </summary>
         <div class="ed-section-body">
           <div class="ed-sub-group">
-            <p class="ed-hint"><strong style="color:var(--ed-text)">Exportar sitio HTML</strong> descarga el deck final listo para presentar/publicar, sin nada del editor.</p>
+            <p class="ed-hint"><strong style="color:var(--ed-text)">Exportar PDF / PPTX</strong> descarga el deck completo (las 17 slides) listo para presentar o compartir. Cada slide se captura como imagen, así que se ve idéntico al editor, pero el texto ya no es editable dentro de esos archivos — para seguir editando, usa «Guardar progreso».</p>
           </div>
           <div class="ed-sub-group">
             <p class="ed-hint"><strong style="color:var(--ed-text)">Guardar / Cargar progreso</strong> descarga o restaura un .json con tu edición completa, para retomarla otro día o el próximo año.</p>

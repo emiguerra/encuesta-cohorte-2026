@@ -414,23 +414,6 @@
     return clone;
   }
 
-  function buildStandaloneHTML() {
-    const clone = cleanClone();
-    return `<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Informe Encuesta Cohorte 2026 — Escuela de Diseño UDP</title>
-<link rel="stylesheet" href="css/style.css">
-</head>
-<body>
-${clone.innerHTML}
-</body>
-</html>
-`;
-  }
-
   function downloadBlob(content, filename, type) {
     const blob = new Blob([content], { type });
     const url = URL.createObjectURL(blob);
@@ -441,13 +424,6 @@ ${clone.innerHTML}
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
-  }
-
-  function exportHTML() {
-    const html = buildStandaloneHTML();
-    downloadBlob(html, "informe-cohorte-2026.html", "text/html");
-    markClean("sitio exportado");
-    toast("Sitio HTML exportado", "success");
   }
 
   /* ---------------------------------------------------------------- */
@@ -489,6 +465,27 @@ ${clone.innerHTML}
     };
   }
 
+  async function captureSlideCanvas(slide, scale = 2) {
+    const restore = flattenComputedStyles(slide);
+    try {
+      return await html2canvas(slide, { scale, useCORS: true, backgroundColor: null });
+    } finally {
+      restore();
+    }
+  }
+
+  async function withCaptureMode(fn) {
+    document.body.classList.add("ed-capturing");
+    const wasEditing = editMode;
+    if (wasEditing) setEditMode(false);
+    try {
+      return await fn();
+    } finally {
+      document.body.classList.remove("ed-capturing");
+      if (wasEditing) setEditMode(true);
+    }
+  }
+
   async function exportPNG() {
     if (typeof html2canvas === "undefined") {
       toast("No se pudo cargar html2canvas (¿sin conexión?)", "error");
@@ -496,12 +493,8 @@ ${clone.innerHTML}
     }
     const slide = document.getElementById(activeSlideId);
     if (!slide) return;
-    document.body.classList.add("ed-capturing");
-    const wasEditing = editMode;
-    if (wasEditing) setEditMode(false);
-    const restore = flattenComputedStyles(slide);
     try {
-      const canvas = await html2canvas(slide, { scale: 2, useCORS: true, backgroundColor: null });
+      const canvas = await withCaptureMode(() => captureSlideCanvas(slide));
       canvas.toBlob((blob) => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -516,10 +509,83 @@ ${clone.innerHTML}
     } catch (err) {
       toast("Error al exportar PNG", "error");
       console.error(err);
-    } finally {
-      restore();
-      document.body.classList.remove("ed-capturing");
-      if (wasEditing) setEditMode(true);
+    }
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Exportar deck completo — PDF y PPTX                                */
+  /* Cada slide se captura como imagen (misma canalización que el PNG)  */
+  /* y se inserta a pantalla completa en una página/slide 16:9. Así el  */
+  /* PDF/PPTX se ven idénticos al deck web, con las mismas fuentes y    */
+  /* degradados — el costo es que el texto queda como imagen, no como   */
+  /* texto editable dentro de esos archivos.                            */
+  /* ---------------------------------------------------------------- */
+  function setExportProgress(btn, current, total) {
+    if (!btn) return;
+    btn.dataset.origLabel = btn.dataset.origLabel || btn.textContent;
+    if (current === null) {
+      btn.textContent = btn.dataset.origLabel;
+      btn.disabled = false;
+    } else {
+      btn.textContent = `Generando… ${current}/${total}`;
+      btn.disabled = true;
+    }
+  }
+
+  async function captureAllSlides(btn) {
+    const slides = $$(".slide", root);
+    const shots = [];
+    for (let i = 0; i < slides.length; i++) {
+      setExportProgress(btn, i + 1, slides.length);
+      const canvas = await captureSlideCanvas(slides[i], 1.5);
+      shots.push({ dataUrl: canvas.toDataURL("image/jpeg", 0.92), w: canvas.width, h: canvas.height });
+    }
+    setExportProgress(btn, null, slides.length);
+    return shots;
+  }
+
+  async function exportPDF() {
+    const jsPDFCtor = window.jspdf && window.jspdf.jsPDF;
+    if (typeof html2canvas === "undefined" || !jsPDFCtor) {
+      toast("No se pudo cargar el generador de PDF (¿sin conexión?)", "error");
+      return;
+    }
+    const btn = document.getElementById("btn-export-pdf");
+    try {
+      const shots = await withCaptureMode(() => captureAllSlides(btn));
+      const pdf = new jsPDFCtor({ orientation: "landscape", unit: "in", format: [13.333, 7.5] });
+      shots.forEach((shot, i) => {
+        if (i > 0) pdf.addPage([13.333, 7.5], "landscape");
+        pdf.addImage(shot.dataUrl, "JPEG", 0, 0, 13.333, 7.5, undefined, "FAST");
+      });
+      pdf.save("informe-cohorte-2026.pdf");
+      toast("PDF exportado", "success");
+    } catch (err) {
+      toast("Error al exportar PDF", "error");
+      console.error(err);
+    }
+  }
+
+  async function exportPPTX() {
+    if (typeof html2canvas === "undefined" || typeof PptxGenJS === "undefined") {
+      toast("No se pudo cargar el generador de PPTX (¿sin conexión?)", "error");
+      return;
+    }
+    const btn = document.getElementById("btn-export-pptx");
+    try {
+      const shots = await withCaptureMode(() => captureAllSlides(btn));
+      const pptx = new PptxGenJS();
+      pptx.defineLayout({ name: "FAAAD_16x9", width: 13.333, height: 7.5 });
+      pptx.layout = "FAAAD_16x9";
+      shots.forEach((shot) => {
+        const slide = pptx.addSlide();
+        slide.addImage({ data: shot.dataUrl, x: 0, y: 0, w: 13.333, h: 7.5 });
+      });
+      await pptx.writeFile({ fileName: "informe-cohorte-2026.pptx" });
+      toast("PPTX exportado", "success");
+    } catch (err) {
+      toast("Error al exportar PPTX", "error");
+      console.error(err);
     }
   }
 
@@ -652,7 +718,8 @@ ${clone.innerHTML}
     document.getElementById("btn-insert-stat").addEventListener("click", insertStat);
     document.getElementById("btn-insert-bars").addEventListener("click", insertBars);
     document.getElementById("btn-insert-circle").addEventListener("click", insertCircle);
-    document.getElementById("btn-export-html").addEventListener("click", exportHTML);
+    document.getElementById("btn-export-pdf").addEventListener("click", exportPDF);
+    document.getElementById("btn-export-pptx").addEventListener("click", exportPPTX);
     document.getElementById("btn-export-png").addEventListener("click", exportPNG);
     document.getElementById("btn-save-json").addEventListener("click", saveJSON);
     document.getElementById("btn-restore-autosave").addEventListener("click", () => restoreAutosave(false));
