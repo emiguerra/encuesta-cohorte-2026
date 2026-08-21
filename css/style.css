@@ -1,0 +1,301 @@
+/* ==========================================================================
+   FaAADudp — Informe Encuesta Cohorte 2026 — Escuela de Diseño
+   Formato: deck fijo 1920×1080 (16:9), estilo "post" del manual FaAAD
+   (ver 01_UDP_Manual-faaad_v1.1.pdf, p.34-38). Cada slide es una grilla de
+   8 columnas × 6 filas (p.25 "grilla madre") — el contenido se ubica en esa
+   grilla, no se apila centrado. Todo el tamaño escala en cqw respecto al
+   ancho real del slide, así se ve igual en el editor achicado que en
+   pantalla completa 1920×1080.
+   Tipografías: Work FaAAD (títulos, solo altas+bajas, nunca todo mayúsculas
+   — manual p.22), Work Sans variable (cuerpo y cifras, peso 100-900), Necto
+   Mono (lugares/fechas/info corta y permanente, siempre en mayúsculas).
+   Los datos de cada bloque viven como atributos legibles en el HTML
+   (data-pct, texto de nodo) — para editar una cifra, se cambia el atributo
+   y el texto, nada más.
+   ========================================================================== */
+
+@font-face {
+  font-family: "Work FaAAD";
+  src: url("../fonts/WorkFaAAD-A.otf") format("opentype");
+  font-display: swap;
+}
+@font-face {
+  font-family: "Work Sans";
+  src: url("../fonts/WorkSans-VariableFont_wght.ttf") format("truetype-variations"),
+       url("../fonts/WorkSans-VariableFont_wght.ttf") format("truetype");
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Necto Mono";
+  src: url("../fonts/NectoMono-Regular.otf") format("opentype");
+  font-display: swap;
+}
+
+:root {
+  /* Paleta institucional UDP + FaAAD completa (manual p.5-6) */
+  --negro:   #1C1C1C;
+  --blanco:  #FFFFFF;
+  --crema:   #E7E4D8;
+  --amarillo:#FFF800;
+  --coral:   #FF6C53; /* color propio de la Facultad de Arquitectura, Arte y Diseño */
+  --rojo:        #D12E1C;
+  --verde-osc:   #3B7359;
+  --azul-osc:    #335C96;
+  --verde-claro: #91DBA6;
+  --amarillo-claro: #EDD121;
+  --azul-claro:  #99B0C9;
+  --linea: #D8D5CC;
+  --texto-sec: #6B6862;
+
+  --f-faaad: "Work FaAAD", "Work Sans", sans-serif;
+  --f-sans:  "Work Sans", sans-serif;
+  --f-mono:  "Necto Mono", ui-monospace, monospace;
+
+  --cols: 8;
+  --rows: 6;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: #0b0b0b;
+  color: var(--negro);
+  font-family: var(--f-sans);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* -------------------------------------------------------------------- */
+/* Slide: lienzo fijo 16:9, grilla de 8×6, todo escala en cqw            */
+/* -------------------------------------------------------------------- */
+
+.slide {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  container-type: inline-size;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  isolation: isolate;
+}
+.slide + .slide { margin-top: 2px; }
+
+.slide-pad {
+  position: relative; z-index: 2; flex: 1;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), 1fr);
+  grid-template-rows: repeat(var(--rows), 1fr);
+  column-gap: 2cqw;
+  padding: 4.4cqw 5cqw 2.6cqw;
+}
+
+.bg-negro   { background: var(--negro);  color: var(--blanco); }
+.bg-blanco  { background: var(--blanco); color: var(--negro); }
+.bg-crema   { background: var(--crema);  color: var(--negro); }
+.bg-coral   { background: var(--coral);  color: var(--negro); }
+.bg-azul    { background: var(--azul-osc); color: var(--blanco); }
+.bg-amarillo{ background: var(--amarillo); color: var(--negro); }
+.bg-rojo    { background: var(--rojo); color: var(--blanco); }
+.bg-verde   { background: var(--verde-osc); color: var(--blanco); }
+.bg-verde-claro { background: var(--verde-claro); color: var(--negro); }
+.bg-amarillo-claro { background: var(--amarillo-claro); color: var(--negro); }
+.bg-azul-claro { background: var(--azul-claro); color: var(--negro); }
+
+/* Fondos degradados sugeridos (manual p.9 "Combinaciones de gradientes") —
+   aplicados como estilo inline por el editor, estas clases solo dan el
+   color de texto legible correspondiente cuando se usan sobre negro/blanco. */
+.slide[data-grad] { color: var(--blanco); }
+.slide[data-grad-ink="negro"] { color: var(--negro); }
+
+/* -------------------------------------------------------------------- */
+/* Tipografía                                                            */
+/* -------------------------------------------------------------------- */
+
+/* Work FaAAD: SOLO altas y bajas mixtas (manual p.22 — nunca todo mayúsculas) */
+.hook, h1, h2 {
+  font-family: var(--f-faaad);
+  font-weight: 400;
+  line-height: .98;
+  margin: 0;
+}
+h1, .hook-xl { font-size: 8.6cqw; }
+h2, .hook-lg { font-size: 6cqw; }
+.hook-md { font-size: 4.4cqw; font-family: var(--f-faaad); line-height: 1.02; margin: 0; }
+
+.stat-huge {
+  font-family: var(--f-sans);
+  font-weight: 700;
+  font-size: 13cqw;
+  line-height: .88;
+  margin: 0;
+  letter-spacing: -.01em;
+  font-variant-numeric: tabular-nums;
+}
+.stat-caption {
+  font-family: var(--f-sans);
+  font-weight: 500;
+  font-size: 1.85cqw;
+  line-height: 1.3;
+  max-width: 26ch;
+}
+
+.parrafo { font-family: var(--f-sans); font-size: 1.5cqw; line-height: 1.4; max-width: 34ch; opacity: .82; }
+
+/* Necto Mono: SIEMPRE mayúsculas — lugares, fechas, info corta y permanente (manual p.21) */
+.mono {
+  font-family: var(--f-mono);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  font-size: .95cqw;
+}
+
+/* Tag/eyebrow tipo "CURSO" / "OFERTA LABORAL" (manual p.34-35): barra de color */
+.tag-eyebrow {
+  display: inline-flex;
+  align-self: start;
+  align-items: center;
+  gap: .5em;
+  padding: .55cqw 1.1cqw;
+  font-family: var(--f-mono);
+  font-size: .95cqw;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.tag-eyebrow.on-coral { background: var(--coral); color: var(--negro); }
+.tag-eyebrow.on-negro { background: var(--negro); color: var(--blanco); }
+.tag-eyebrow.on-crema { background: var(--negro); color: var(--crema); }
+.tag-eyebrow.outline { background: transparent; border: 1px solid currentColor; }
+
+.eyebrow-icon { width: 2.2cqw; height: 2.2cqw; flex-shrink: 0; }
+
+/* -------------------------------------------------------------------- */
+/* Ubicación en la grilla — 8 columnas / 6 filas por slide                */
+/* -------------------------------------------------------------------- */
+
+.gc-tag        { grid-column: 1 / 6; grid-row: 1 / 2; align-self: start; }
+.gc-hero-title { grid-column: 1 / 7; grid-row: 2 / 6; align-self: end; }
+.gc-hero-sub   { grid-column: 1 / 6; grid-row: 6 / 7; align-self: start; padding-top: .6cqw; }
+.gc-stat       { grid-column: 1 / 5; grid-row: 2 / 7; align-self: center; }
+.gc-stat-wide  { grid-column: 1 / 9; grid-row: 2 / 4; align-self: end; }
+.gc-caption    { grid-column: 5 / 9; grid-row: 2 / 7; align-self: center; }
+.gc-caption-below { grid-column: 1 / 8; grid-row: 4 / 5; align-self: start; padding-top: .6cqw; }
+.gc-bars       { grid-column: 1 / 8; grid-row: 5 / 7; align-self: end; padding-bottom: .4cqw; }
+.gc-bars-wide  { grid-column: 1 / 9; grid-row: 4 / 7; align-self: end; padding-bottom: .4cqw; }
+.gc-list       { grid-column: 1 / 9; grid-row: 2 / 7; align-self: center; }
+.gc-cards      { grid-column: 1 / 9; grid-row: 3 / 7; }
+.gc-pending    { grid-column: 1 / 7; grid-row: 2 / 7; align-self: center; }
+.gc-icon       { grid-column: 1 / 2; grid-row: 1 / 2; align-self: start; }
+
+.gc-title-sm    { grid-column: 1 / 7; grid-row: 2 / 3; align-self: end; }
+.gc-list-lower  { grid-column: 1 / 9; grid-row: 3 / 7; align-self: center; }
+.gc-pending-lower { grid-column: 1 / 7; grid-row: 3 / 7; align-self: center; }
+.gc-caption-upper { grid-column: 5 / 9; grid-row: 2 / 5; align-self: end; }
+.gc-bars-under  { grid-column: 5 / 9; grid-row: 5 / 7; align-self: start; }
+.gc-stat-inline { grid-column: 1 / 3; grid-row: 2 / 4; align-self: end; }
+.gc-caption-inline { grid-column: 3 / 9; grid-row: 2 / 4; align-self: end; padding-bottom: .3cqw; }
+
+/* -------------------------------------------------------------------- */
+/* Decoración: círculos y bloques, "grilla ilustrativa" (manual p.25-30) */
+/* -------------------------------------------------------------------- */
+
+.deco {
+  position: absolute; z-index: 1; border-radius: 50%; pointer-events: none;
+}
+.deco-solid { background: currentColor; }
+.deco.pos-br { right: -12cqw; bottom: -14cqw; width: 46cqw; height: 46cqw; }
+.deco.pos-tr { right: -10cqw; top: -12cqw; width: 32cqw; height: 32cqw; }
+.deco.pos-bl { left: -12cqw; bottom: -16cqw; width: 40cqw; height: 40cqw; }
+.deco.pos-mid-r { right: 3cqw; top: 50%; transform: translateY(-50%); width: 26cqw; height: 26cqw; }
+.deco.pos-r-band { right: 0; top: 0; bottom: 0; width: 26cqw; height: auto; border-radius: 0; }
+
+/* Textura de grilla (manual p.25) — usada en los slides "pendiente": la
+   cuadrícula sin llenar es la metáfora visual del contenido que falta. */
+.deco-grid {
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background-image:
+    repeating-linear-gradient(to right, currentColor 0 1px, transparent 1px calc(100% / 8)),
+    repeating-linear-gradient(to bottom, currentColor 0 1px, transparent 1px calc(100% / 6));
+  opacity: .06;
+}
+
+/* -------------------------------------------------------------------- */
+/* Lockup / firma inferior — alineación horizontal, misma altura que la  */
+/* palabra FaAAD (manual p.18 regla 1; p.34 construcción de post)        */
+/* -------------------------------------------------------------------- */
+
+.firma {
+  position: relative; z-index: 2;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1cqw; padding: 0 5cqw 2.6cqw;
+}
+.firma-left { display: flex; align-items: center; gap: 1.1cqw; }
+.firma img { height: 1.5cqw; width: auto; display: block; }
+.firma .escuela-tag { font-family: var(--f-sans); font-size: 1.8cqw; line-height: 1; opacity: .92; }
+.firma .doc-tag { font-family: var(--f-mono); font-size: .85cqw; text-transform: uppercase; letter-spacing: .06em; opacity: .6; }
+
+/* -------------------------------------------------------------------- */
+/* Índice                                                                */
+/* -------------------------------------------------------------------- */
+
+.indice-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; justify-content: center; height: 100%; }
+.indice-lista li {
+  display: grid; grid-template-columns: 1fr 5fr 2fr; align-items: baseline; gap: 1.6cqw;
+  padding: 1.3cqw 0; border-bottom: 1px solid var(--linea);
+}
+.indice-lista .num { font-family: var(--f-mono); color: var(--coral); font-size: 1.6cqw; }
+.indice-lista .pregunta { font-family: var(--f-faaad); font-size: 3.2cqw; }
+.indice-lista .detalle { font-size: 1.2cqw; color: var(--texto-sec); text-align: right; font-family: var(--f-sans); }
+
+/* -------------------------------------------------------------------- */
+/* Aspectos (síntesis): tarjetas de una frase, no párrafos               */
+/* -------------------------------------------------------------------- */
+
+.aspectos-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; justify-content: center; height: 100%; gap: 1.4cqw; max-width: 92%; }
+.aspectos-lista li {
+  display: grid; grid-template-columns: 1fr 7fr; align-items: baseline; gap: 1.4cqw;
+  font-family: var(--f-faaad); font-size: 2.8cqw; line-height: 1.15;
+}
+
+.n-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 2.7cqw; height: 2.7cqw; min-width: 2.7cqw; border-radius: 50%;
+  background: var(--coral); color: var(--negro);
+  font-family: var(--f-mono); font-size: 1.15cqw; flex-shrink: 0;
+}
+.bg-coral .n-badge { background: var(--negro); color: var(--blanco); }
+
+/* -------------------------------------------------------------------- */
+/* Barras — compactas, pocas categorías por slide                        */
+/* -------------------------------------------------------------------- */
+
+.barras { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; justify-content: flex-end; gap: .9cqw; height: 100%; }
+.barra-fila { display: grid; grid-template-columns: minmax(10cqw, 17cqw) 1fr auto; align-items: center; gap: 1.1cqw; }
+.barra-label { font-size: 1.25cqw; font-family: var(--f-sans); font-weight: 500; }
+.barra-track { display: block; background: rgba(0,0,0,.08); border-radius: 3px; height: 1.3cqw; overflow: hidden; }
+.bg-negro .barra-track, .bg-azul .barra-track, .bg-rojo .barra-track, .bg-verde .barra-track { background: rgba(255,255,255,.14); }
+.barra-fill { display: block; height: 100%; width: calc(var(--pct, 0) * 1%); border-radius: 3px; background: var(--coral); }
+.barra-valor { font-weight: 700; font-size: 1.4cqw; min-width: 4ch; text-align: right; font-variant-numeric: tabular-nums; font-family: var(--f-sans); }
+
+/* -------------------------------------------------------------------- */
+/* Contenido pendiente (placeholder honesto, no vacío)                  */
+/* -------------------------------------------------------------------- */
+
+.pendiente .mono { color: var(--coral); }
+.pendiente p.detalle-pendiente { margin: 1.2cqw 0 0; font-size: 1.35cqw; max-width: 46ch; opacity: .75; font-family: var(--f-sans); }
+
+/* -------------------------------------------------------------------- */
+/* Cierre — tarjetas de asignaturas                                      */
+/* -------------------------------------------------------------------- */
+
+.asignaturas-grid { display: grid; grid-template-columns: repeat(8, 1fr); grid-auto-rows: 1fr; column-gap: 2cqw; row-gap: 1.4cqw; height: 100%; }
+.asignatura-card { grid-column: span 4; border-top: 2px solid currentColor; padding-top: 1.1cqw; align-self: start; }
+.asignatura-card .foco { font-family: var(--f-faaad); font-size: 1.9cqw; display: block; margin-bottom: .5cqw; }
+.asignatura-card .lista { font-size: 1.15cqw; font-family: var(--f-sans); opacity: .8; margin: 0; }
+
+/* -------------------------------------------------------------------- */
+/* Divisor de sección (chapter break)                                    */
+/* -------------------------------------------------------------------- */
+
+.icon-badge { width: 5.4cqw; height: 5.4cqw; }

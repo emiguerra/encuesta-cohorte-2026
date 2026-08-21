@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="es" class="editor-active">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Editor — Informe Encuesta Cohorte 2026 — Escuela de Diseño UDP</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/editor.css">
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
+</head>
+<body>
+
+<!-- ================================================================
+     TOOLBAR
+     ================================================================ -->
+<header id="ed-toolbar">
+  <div class="ed-tb-left">
+    <span class="ed-logo"><b>FaAADudp</b> · editor de informe</span>
+    <span class="ed-doc-status" id="ed-status">sin guardar</span>
+  </div>
+  <div class="ed-tb-center">
+    <button id="btn-undo" class="ed-btn" title="Deshacer (Ctrl/Cmd+Z)" disabled>↶ Deshacer</button>
+    <button id="btn-redo" class="ed-btn" title="Rehacer (Ctrl/Cmd+Shift+Z)" disabled>↷ Rehacer</button>
+    <button id="btn-toggle-edit" class="ed-btn active">✎ Editar contenido</button>
+  </div>
+  <div class="ed-tb-right">
+    <button id="btn-save-json" class="ed-btn">Guardar progreso</button>
+    <button id="btn-load-json" class="ed-btn">Cargar progreso</button>
+    <button id="btn-export-png" class="ed-btn">PNG del slide</button>
+    <button id="btn-export-html" class="ed-btn primary">Exportar sitio HTML</button>
+    <input type="file" id="file-load-json" accept="application/json" class="ed-file-input">
+  </div>
+</header>
+
+<!-- ================================================================
+     LAYOUT
+     ================================================================ -->
+<main id="ed-layout">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside id="ed-sidebar">
+    <div id="ed-sidebar-inner">
+
+      <details class="ed-section" open>
+        <summary class="ed-section-header">
+          <span>Navegar</span>
+          <svg class="ed-chevron" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="ed-section-body">
+          <div class="ed-sub-group">
+            <div class="ed-nav-list" id="ed-nav-list"><!-- generado por JS --></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="ed-section" open>
+        <summary class="ed-section-header">
+          <span>Slide activo — color</span>
+          <svg class="ed-chevron" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="ed-section-body">
+          <div class="ed-sub-group">
+            <p class="ed-sub-label">Fondo sólido — paleta completa FaAAD</p>
+            <div class="ed-swatches" id="ed-bg-swatches">
+              <button class="ed-swatch" data-bg="bg-negro" style="background:#1C1C1C" title="Negro"></button>
+              <button class="ed-swatch" data-bg="bg-blanco" style="background:#FFFFFF" title="Blanco"></button>
+              <button class="ed-swatch" data-bg="bg-crema" style="background:#E7E4D8" title="Crema"></button>
+              <button class="ed-swatch" data-bg="bg-amarillo" style="background:#FFF800" title="Amarillo"></button>
+              <button class="ed-swatch" data-bg="bg-coral" style="background:#FF6C53" title="Coral"></button>
+              <button class="ed-swatch" data-bg="bg-rojo" style="background:#D12E1C" title="Rojo"></button>
+              <button class="ed-swatch" data-bg="bg-verde" style="background:#3B7359" title="Verde oscuro"></button>
+              <button class="ed-swatch" data-bg="bg-azul" style="background:#335C96" title="Azul oscuro"></button>
+              <button class="ed-swatch" data-bg="bg-verde-claro" style="background:#91DBA6" title="Verde claro"></button>
+              <button class="ed-swatch" data-bg="bg-amarillo-claro" style="background:#EDD121" title="Amarillo claro"></button>
+              <button class="ed-swatch" data-bg="bg-azul-claro" style="background:#99B0C9" title="Azul claro"></button>
+            </div>
+          </div>
+          <div class="ed-sub-group">
+            <p class="ed-sub-label">Degradados sugeridos (manual p.9)</p>
+            <div class="ed-swatches" id="ed-grad-swatches">
+              <button class="ed-swatch" data-grad="linear-gradient(160deg,#FF6C53,#335C96)" data-ink="blanco" style="background:linear-gradient(160deg,#FF6C53,#335C96)" title="Coral → Azul oscuro"></button>
+              <button class="ed-swatch" data-grad="linear-gradient(160deg,#335C96,#99B0C9)" data-ink="blanco" style="background:linear-gradient(160deg,#335C96,#99B0C9)" title="Azul oscuro → Azul claro"></button>
+              <button class="ed-swatch" data-grad="linear-gradient(160deg,#D12E1C,#FF6C53)" data-ink="blanco" style="background:linear-gradient(160deg,#D12E1C,#FF6C53)" title="Rojo → Coral"></button>
+              <button class="ed-swatch" data-grad="linear-gradient(160deg,#3B7359,#91DBA6)" data-ink="negro" style="background:linear-gradient(160deg,#3B7359,#91DBA6)" title="Verde oscuro → Verde claro"></button>
+              <button class="ed-swatch" data-grad="linear-gradient(160deg,#1C1C1C,#D12E1C)" data-ink="blanco" style="background:linear-gradient(160deg,#1C1C1C,#D12E1C)" title="Negro → Rojo"></button>
+              <button class="ed-swatch" data-grad="linear-gradient(160deg,#FFF800,#EDD121)" data-ink="negro" style="background:linear-gradient(160deg,#FFF800,#EDD121)" title="Amarillo → Amarillo claro"></button>
+              <button class="ed-swatch" data-grad="linear-gradient(160deg,#99B0C9,#FF6C53)" data-ink="negro" style="background:linear-gradient(160deg,#99B0C9,#FF6C53)" title="Azul claro → Coral"></button>
+              <button class="ed-swatch" data-grad="linear-gradient(160deg,#1C1C1C,#335C96)" data-ink="blanco" style="background:linear-gradient(160deg,#1C1C1C,#335C96)" title="Negro → Azul oscuro"></button>
+            </div>
+            <button id="btn-clear-grad" class="ed-action" style="margin-top:8px">Quitar degradado</button>
+          </div>
+        </div>
+      </details>
+
+      <details class="ed-section" open>
+        <summary class="ed-section-header">
+          <span>Insertar gráficos</span>
+          <svg class="ed-chevron" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="ed-section-body">
+          <div class="ed-sub-group">
+            <p class="ed-hint">Se agregan al slide activo (el resaltado en «Navegar»). Después se editan como cualquier texto.</p>
+            <button id="btn-insert-stat" class="ed-action">+ Cifra destacada</button>
+            <button id="btn-insert-bars" class="ed-action" style="margin-top:6px">+ Bloque de barras</button>
+            <button id="btn-insert-circle" class="ed-action" style="margin-top:6px">+ Círculo decorativo</button>
+          </div>
+        </div>
+      </details>
+
+      <details class="ed-section" open>
+        <summary class="ed-section-header">
+          <span>Cómo editar</span>
+          <svg class="ed-chevron" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="ed-section-body">
+          <div class="ed-sub-group">
+            <p class="ed-hint">Formato fijo 1920×1080, grilla de 8 columnas — cada slide es una pieza de una sola idea. Con «Editar contenido» activo: clic en cualquier texto para escribir encima. Clic en un porcentaje de barra para cambiarlo. Pasa el mouse sobre una fila para ver «Eliminar» / «+ Agregar fila».</p>
+          </div>
+        </div>
+      </details>
+
+      <details class="ed-section">
+        <summary class="ed-section-header">
+          <span>Exportar y guardar</span>
+          <svg class="ed-chevron" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="ed-section-body">
+          <div class="ed-sub-group">
+            <p class="ed-hint"><strong style="color:var(--ed-text)">Exportar sitio HTML</strong> descarga el deck final listo para presentar/publicar, sin nada del editor.</p>
+          </div>
+          <div class="ed-sub-group">
+            <p class="ed-hint"><strong style="color:var(--ed-text)">Guardar / Cargar progreso</strong> descarga o restaura un .json con tu edición completa, para retomarla otro día o el próximo año.</p>
+          </div>
+          <div class="ed-sub-group">
+            <button id="btn-restore-autosave" class="ed-action">Restaurar autoguardado</button>
+          </div>
+        </div>
+      </details>
+
+    </div>
+  </aside>
+
+  <!-- ===== PREVIEW ===== -->
+  <section id="ed-preview-area">
+    <div id="ed-preview-scale">
+      <div id="informe-root">
+
+        <!-- ============================================================
+             1. PORTADA
+             ============================================================ -->
+        <section class="slide bg-negro" id="slide-1" data-slide-title="Portada">
+          <div class="deco pos-br" style="background:radial-gradient(circle at 32% 30%, var(--coral), var(--azul-osc) 78%)"></div>
+          <div class="slide-pad">
+            <span class="tag-eyebrow outline gc-tag ed-editable" contenteditable="true">Informe de resultados</span>
+            <h1 class="gc-hero-title ed-editable" contenteditable="true">Encuesta cohorte 2026</h1>
+            <p class="mono gc-hero-sub ed-editable" contenteditable="true" style="opacity:.6">N = 155 · sección 2</p>
+          </div>
+          <div class="firma">
+            <span class="firma-left">
+              <img src="assets/logo-faaad-blanco.png" alt="FaAADudp">
+              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
+            </span>
+            <span class="doc-tag ed-editable" contenteditable="true">2026</span>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             2. ÍNDICE
+             ============================================================ -->
+        <section class="slide bg-crema" id="slide-2" data-slide-title="Índice">
+          <div class="slide-pad">
+            <span class="tag-eyebrow on-negro gc-tag">Índice</span>
+            <div class="gc-list">
+              <ul class="indice-lista">
+                <li>
+                  <span class="num">01</span>
+                  <span class="pregunta ed-editable" contenteditable="true">¿Quiénes son?</span>
+                  <span class="detalle ed-editable" contenteditable="true">Caracterización</span>
+                </li>
+                <li>
+                  <span class="num">02</span>
+                  <span class="pregunta ed-editable" contenteditable="true">¿Cómo piensan?</span>
+                  <span class="detalle ed-editable" contenteditable="true">Observación y abstracción</span>
+                </li>
+                <li>
+                  <span class="num">03</span>
+                  <span class="pregunta ed-editable" contenteditable="true">¿Qué traen hecho?</span>
+                  <span class="detalle ed-editable" contenteditable="true">Habilidades técnicas</span>
+                </li>
+                <li>
+                  <span class="num">04</span>
+                  <span class="pregunta ed-editable" contenteditable="true">¿Cómo han cambiado en 4 años?</span>
+                  <span class="detalle ed-editable" contenteditable="true">Comparativa 2023–2026</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div class="firma">
+            <span class="firma-left">
+              <img src="assets/logo-faaad-negro.png" alt="FaAADudp">
+              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
+            </span>
+            <span class="doc-tag ed-editable" contenteditable="true">Cohorte 2026</span>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             3. SÍNTESIS — ASPECTOS FUERTES
+             ============================================================ -->
+        <section class="slide bg-blanco" id="slide-3" data-slide-title="Síntesis — fuertes">
+          <div class="deco pos-br" style="color:var(--azul-osc)"><div class="deco-solid" style="width:100%;height:100%;border-radius:50%;opacity:.14"></div></div>
+          <div class="slide-pad">
+            <span class="tag-eyebrow on-negro gc-tag">Síntesis general</span>
+            <h2 class="gc-title-sm ed-editable" contenteditable="true">Lo que traen instalado</h2>
+            <div class="gc-list-lower">
+              <ul class="aspectos-lista">
+                <li><span class="n-badge">01</span><span class="ed-editable" contenteditable="true">Buena base para el pensamiento visual</span></li>
+                <li><span class="n-badge">02</span><span class="ed-editable" contenteditable="true">Motivación intrínseca hacia la creación</span></li>
+                <li><span class="n-badge">03</span><span class="ed-editable" contenteditable="true">Manejo de herramientas prácticas</span></li>
+                <li><span class="n-badge">04</span><span class="ed-editable" contenteditable="true">Disposición para el trabajo colaborativo</span></li>
+              </ul>
+            </div>
+          </div>
+          <div class="firma">
+            <span class="firma-left">
+              <img src="assets/logo-faaad-negro.png" alt="FaAADudp">
+              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
+            </span>
+            <span class="doc-tag ed-editable" contenteditable="true">Aspectos fuertes</span>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             4. SÍNTESIS — ASPECTOS A FORTALECER
+             ============================================================ -->
+        <section class="slide bg-negro" id="slide-4" data-slide-title="Síntesis — a fortalecer">
+          <div class="deco pos-br" style="color:var(--coral)"><div class="deco-solid" style="width:100%;height:100%;border-radius:50%"></div></div>
+          <div class="slide-pad">
+            <span class="tag-eyebrow on-coral gc-tag">Síntesis general</span>
+            <h2 class="gc-title-sm ed-editable" contenteditable="true">Lo que hay que trabajar</h2>
+            <div class="gc-list-lower">
+              <ul class="aspectos-lista">
+                <li><span class="n-badge">01</span><span class="ed-editable" contenteditable="true">Abstracción y síntesis visual</span></li>
+                <li><span class="n-badge">02</span><span class="ed-editable" contenteditable="true">Diseño como disciplina proyectual</span></li>
+                <li><span class="n-badge">03</span><span class="ed-editable" contenteditable="true">Herramientas y competencias técnicas</span></li>
+                <li><span class="n-badge">04</span><span class="ed-editable" contenteditable="true">Hábitos de trabajo y criterio propio</span></li>
+              </ul>
+            </div>
+          </div>
+          <div class="firma">
+            <span class="firma-left">
+              <img src="assets/logo-faaad-blanco.png" alt="FaAADudp">
+              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
+            </span>
+            <span class="doc-tag ed-editable" contenteditable="true">Aspectos a fortalecer</span>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             5. SECCIÓN 1 — pendiente
+             ============================================================ -->
+        <section class="slide bg-crema" id="slide-5" data-slide-title="Sección 1 — pendiente">
+          <div class="deco-grid" style="color:var(--negro)"></div>
+          <div class="slide-pad">
+            <span class="tag-eyebrow on-negro gc-tag">
+              <svg class="eyebrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 20c0-4.4 3.4-7.5 7.5-7.5s7.5 3.1 7.5 7.5"/></svg>
+              Sección 1
+            </span>
+            <h2 class="gc-title-sm ed-editable" contenteditable="true">¿Quiénes son?</h2>
+            <div class="gc-pending-lower pendiente">
+              <p class="mono">Contenido pendiente de origen</p>
+              <p class="detalle-pendiente ed-editable" contenteditable="true">Los datos de caracterización 2026 viven en un documento aparte (PowerPoint) y aún no están integrados a este deck.</p>
+            </div>
+          </div>
+          <div class="firma">
+            <span class="firma-left">
+              <img src="assets/logo-faaad-negro.png" alt="FaAADudp">
+              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
+            </span>
+            <span class="doc-tag ed-editable" contenteditable="true">Caracterización</span>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             6. SECCIÓN 2 — divisor
+             ============================================================ -->
+        <section class="slide bg-negro" id="slide-6" data-slide-title="Sección 2 — divisor">
+          <div class="deco pos-tr" style="color:var(--azul-osc)"><div class="deco-solid" style="width:100%;height:100%;border-radius:50%"></div></div>
+          <div class="slide-pad">
+            <svg class="icon-badge gc-icon" viewBox="0 0 24 24" fill="none" stroke="var(--coral)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12c3-5.3 8-8 10-8s7 2.7 10 8c-3 5.3-8 8-10 8s-7-2.7-10-8Z"/><circle cx="12" cy="12" r="3"/></svg>
+            <span class="tag-eyebrow on-coral" style="grid-column:2/6;grid-row:1/2;align-self:start">Sección 2</span>
+            <h1 class="gc-hero-title ed-editable" contenteditable="true">¿Cómo piensan?</h1>
+            <p class="parrafo gc-hero-sub ed-editable" contenteditable="true">Observación y abstracción visual — reconocimiento de patrones.</p>
+          </div>
+          <div class="firma">
+            <span class="firma-left">
+              <img src="assets/logo-faaad-blanco.png" alt="FaAADudp">
+              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
+            </span>
+            <span class="doc-tag ed-editable" contenteditable="true">N = 155</span>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             7. SECCIÓN 2 — P1 (Continuidad)
+             ============================================================ -->
+        <section class="slide bg-blanco" id="slide-7" data-slide-title="Sección 2 — P1">
+          <div class="deco pos-br" style="color:var(--coral)"><div class="deco-solid" style="width:100%;height:100%;border-radius:50%;opacity:.12"></div></div>
+          <div class="slide-pad">
+            <span class="tag-eyebrow on-negro gc-tag">Pregunta 1 · N = 155</span>
+            <p class="stat-huge gc-stat ed-editable ed-pct-standalone" contenteditable="true" style="color:var(--coral)">73%</p>
+            <p class="stat-caption gc-caption-upper ed-editable" contenteditable="true">Reconoce el patrón de <strong>Continuidad</strong> en una secuencia de formas — logro satisfactorio.</p>
+            <div class="gc-bars-under">
+              <ul class="barras">
+                <li class="barra-fila" style="--pct:72.9">
+                  <span class="barra-label ed-editable" contenteditable="true">Continuidad</span>
+                  <span class="barra-track"><span class="barra-fill"></span></span>
+                  <span class="barra-valor ed-editable ed-pct" contenteditable="true">72,9%</span>
+                </li>
+                <li class="barra-fila" style="--pct:24.5">
+                  <span class="barra-label ed-editable" contenteditable="true">Ritmo</span>
+                  <span class="barra-track"><span class="barra-fill" style="background:var(--azul-osc)"></span></span>
+                  <span class="barra-valor ed-editable ed-pct" contenteditable="true">24,5%</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div class="firma">
+            <span class="firma-left">
+              <img src="assets/logo-faaad-negro.png" alt="FaAADudp">
+              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
+            </span>
+            <span class="doc-tag ed-editable" contenteditable="true">Observación y abstracción</span>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             8. SECCIÓN 2 — P2 (Colaboración)
+             ============================================================ -->
+        <section class="slide bg-coral" id="slide-8" data-slide-title="Sección 2 — P2">
+          <div class="slide-pad">
+            <span class="tag-eyebrow on-negro gc-tag">Pregunta 2 · N = 155</span>
+            <p class="stat-huge gc-stat ed-editable ed-pct-standalone" contenteditable="true">86%</p>
+            <p class="stat-caption gc-caption ed-editable" contenteditable="true">Asocia correctamente una figura con el concepto <strong>Colaboración</strong> — logro satisfactorio.</p>
+          </div>
+          <div class="firma">
+            <span class="firma-left">
+              <img src="assets/logo-faaad-negro.png" alt="FaAADudp">
+              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
+            </span>
+            <span class="doc-tag ed-editable" contenteditable="true">Observación y abstracción</span>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             9. SECCIÓN 2 — P3 (ojo humano)
+             ============================================================ -->
+        <section class="slide bg-azul" id="slide-9" data-slide-title="Sección 2 — P3">
+          <div class="slide-pad">
+            <span class="tag-eyebrow on-coral gc-tag">Pregunta 3 · N = 155</span>
+            <p class="stat-huge gc-stat ed-editable ed-pct-standalone" contenteditable="true" style="color:var(--coral)">61%</p>
+            <p class="stat-caption gc-caption ed-editable" contenteditable="true">Sintetiza visualmente la idea de un <strong>ojo humano</strong> — logro suficiente.</p>
+          </div>
+          <div class="firma">
+            <span class="firma-left">
+              <img src="assets/logo-faaad-blanco.png" alt="FaAADudp">
+              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
+            </span>
+            <span class="doc-tag ed-editable" contenteditable="true">Observación y abstracción</span>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             10. SECCIÓN 2 — P4 (bicicleta texto)
+             ============================================================ -->
+        <section class="slide bg-negro" id="slide-10" data-slide-title="Sección 2 — P4">
+          <div class="slide-pad">
+            <span class="tag-eyebrow on-coral gc-tag">Pregunta 4 · N = 155</span>
+            <p class="stat-huge gc-stat ed-editable ed-pct-standalone" contenteditable="true" style="color:var(--coral)">38%</p>
+            <p class="stat-caption gc-caption ed-editable" contenteditable="true">Explica una bicicleta por sus <strong>relaciones funcionales</strong>, no solo por sus partes — logro insuficiente.</p>
+          </div>
+          <div class="firma">
+            <span class="firma-left">
+              <img src="assets/logo-faaad-blanco.png" alt="FaAADudp">
+              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
+            </span>
+            <span class="doc-tag ed-editable" contenteditable="true">Observación y abstracción</span>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             11. SECCIÓN 2 — P5 (reformular)
+             ============================================================ -->
+        <section class="slide bg-crema" id="slide-11" data-slide-title="Sección 2 — P5">
+          <div class="deco pos-br" style="color:var(--coral)"><div class="deco-solid" style="width:100%;height:100%;border-radius:50%;opacity:.16"></div></div>
+          <div class="slide-pad">
+            <span class="tag-eyebrow on-negro gc-tag">Pregunta 5 · N = 155</span>
+            <h2 class="gc-hero-title ed-editable" contenteditable="true">No hay lectura clara</h2>
+            <p class="stat-caption gc-caption-below ed-editable" contenteditable="true" style="font-size:1.7cqw;max-width:44ch">La formulación generó ambigüedad entre dos alternativas de representación de bicicleta. <strong style="color:var(--coral)">Se recomienda reformular</strong> antes de la próxima aplicación.</p>
+          </div>
+          <div class="firma">
+            <span class="firma-left">
+              <img src="assets/logo-faaad-negro.png" alt="FaAADudp">
+              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
+            </span>
+            <span class="doc-tag ed-editable" contenteditable="true">Observación y abstracción</span>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             12. SECCIÓN 4 — divisor
+             ============================================================ -->
+        <section class="slide bg-negro" id="slide-12" data-slide-title="Sección 4 — divisor">
+          <div class="deco pos-tr" style="color:var(--coral)"><div class="deco-solid" style="width:100%;height:100%;border-radius:50%"></div></div>
+          <div class="slide-pad">
+            <svg class="icon-badge gc-icon" viewBox="0 0 24 24" fill="none" stroke="var(--coral)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="10.5" rx="1"/><path d="M1.5 18.5h21L20.5 21h-17L1.5 18.5Z"/></svg>
+            <span class="tag-eyebrow on-coral" style="grid-column:2/6;grid-row:1/2;align-self:start">Sección 4</span>
+            <h1 class="gc-hero-title ed-editable" contenteditable="true">¿Qué traen hecho?</h1>
+            <p class="parrafo gc-hero-sub ed-editable" contenteditable="true">Hobbies, técnicas y herramientas con las que ya llegan.</p>
+          </div>
+          <div class="firma">
+            <span class="firma-left">
+              <img src="assets/logo-faaad-blanco.png" alt="FaAADudp">
+              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
+            </span>
+            <span class="doc-tag ed-editable" contenteditable="true">Menciones, no % de N</span>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             13. SECCIÓN 4 — hobbies
+             ============================================================ -->
+        <section class="slide bg-blanco" id="slide-13" data-slide-title="Sección 4 — hobbies">
+          <div class="slide-pad">
+            <span class="tag-eyebrow on-negro gc-tag">Disciplinas y hobbies</span>
+            <p class="stat-huge gc-stat-inline ed-editable ed-pct-standalone" contenteditable="true" style="color:var(--coral);font-size:7cqw">88</p>
+            <p class="stat-caption gc-caption-inline ed-editable" contenteditable="true">menciones en <strong>Artes visuales e ilustración</strong>, la categoría líder</p>
+            <div class="gc-bars-wide">
+              <ul class="barras">
+                <li class="barra-fila" style="--pct:100"><span class="barra-label ed-editable" contenteditable="true">Artes visuales e ilustración</span><span class="barra-track"><span class="barra-fill"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">88</span></li>
+                <li class="barra-fila" style="--pct:47.7"><span class="barra-label ed-editable" contenteditable="true">Música y artes escénicas</span><span class="barra-track"><span class="barra-fill" style="background:var(--azul-osc)"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">42</span></li>
+                <li class="barra-fila" style="--pct:38.6"><span class="barra-label ed-editable" contenteditable="true">Fotografía y producción audiovisual</span><span class="barra-track"><span class="barra-fill" style="background:var(--azul-osc)"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">34</span></li>
+                <li class="barra-fila" style="--pct:35.2"><span class="barra-label ed-editable" contenteditable="true">Manualidades y oficios</span><span class="barra-track"><span class="barra-fill" style="background:var(--azul-osc)"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">31</span></li>
+              </ul>
+            </div>
+          </div>
+          <div class="firma">
+            <span class="firma-left">
+              <img src="assets/logo-faaad-negro.png" alt="FaAADudp">
+              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
+            </span>
+            <span class="doc-tag ed-editable" contenteditable="true">Habilidades técnicas</span>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             14. SECCIÓN 4 — técnicas
+             ============================================================ -->
+        <section class="slide bg-crema" id="slide-14" data-slide-title="Sección 4 — técnicas">
+          <div class="slide-pad">
+            <span class="tag-eyebrow on-negro gc-tag">Técnicas que ya han trabajado</span>
+            <p class="stat-huge gc-stat-inline ed-editable ed-pct-standalone" contenteditable="true" style="color:var(--coral);font-size:7cqw">79</p>
+            <p class="stat-caption gc-caption-inline ed-editable" contenteditable="true">menciones en <strong>Técnicas gráficas y pictóricas</strong> — predomina lo tradicional</p>
+            <div class="gc-bars-wide">
+              <ul class="barras">
+                <li class="barra-fila" style="--pct:100"><span class="barra-label ed-editable" contenteditable="true">Técnicas gráficas y pictóricas</span><span class="barra-track"><span class="barra-fill"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">79</span></li>
+                <li class="barra-fila" style="--pct:45.6"><span class="barra-label ed-editable" contenteditable="true">Técnicas textiles</span><span class="barra-track"><span class="barra-fill" style="background:var(--azul-osc)"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">36</span></li>
+                <li class="barra-fila" style="--pct:36.7"><span class="barra-label ed-editable" contenteditable="true">Técnicas tridimensionales</span><span class="barra-track"><span class="barra-fill" style="background:var(--azul-osc)"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">29</span></li>
+                <li class="barra-fila" style="--pct:30.4"><span class="barra-label ed-editable" contenteditable="true">Fotografía e impresión</span><span class="barra-track"><span class="barra-fill" style="background:var(--azul-osc)"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">24</span></li>
+              </ul>
+            </div>
+          </div>
+          <div class="firma">
+            <span class="firma-left">
+              <img src="assets/logo-faaad-negro.png" alt="FaAADudp">
+              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
+            </span>
+            <span class="doc-tag ed-editable" contenteditable="true">Habilidades técnicas</span>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             15. SECCIÓN 4 — herramientas digitales
+             ============================================================ -->
+        <section class="slide bg-negro" id="slide-15" data-slide-title="Sección 4 — herramientas">
+          <div class="slide-pad">
+            <span class="tag-eyebrow on-coral gc-tag">Herramientas digitales</span>
+            <p class="stat-huge gc-stat-inline ed-editable ed-pct-standalone" contenteditable="true" style="color:var(--coral);font-size:7cqw">132</p>
+            <p class="stat-caption gc-caption-inline ed-editable" contenteditable="true">menciones en <strong>herramientas de productividad</strong> — IA generativa ya suma 61</p>
+            <div class="gc-bars-wide">
+              <ul class="barras">
+                <li class="barra-fila" style="--pct:100"><span class="barra-label ed-editable" contenteditable="true">Herramientas de productividad</span><span class="barra-track"><span class="barra-fill"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">132</span></li>
+                <li class="barra-fila" style="--pct:56.1"><span class="barra-label ed-editable" contenteditable="true">Software de diseño gráfico</span><span class="barra-track"><span class="barra-fill" style="background:var(--blanco)"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">74</span></li>
+                <li class="barra-fila" style="--pct:46.2"><span class="barra-label ed-editable" contenteditable="true">IA generativa</span><span class="barra-track"><span class="barra-fill" style="background:var(--blanco)"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">61</span></li>
+                <li class="barra-fila" style="--pct:27.3"><span class="barra-label ed-editable" contenteditable="true">Edición audiovisual</span><span class="barra-track"><span class="barra-fill" style="background:var(--blanco)"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">36</span></li>
+              </ul>
+            </div>
+          </div>
+          <div class="firma">
+            <span class="firma-left">
+              <img src="assets/logo-faaad-blanco.png" alt="FaAADudp">
+              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
+            </span>
+            <span class="doc-tag ed-editable" contenteditable="true">Habilidades técnicas</span>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             16. COMPARATIVA HISTÓRICA — pendiente
+             ============================================================ -->
+        <section class="slide bg-azul" id="slide-16" data-slide-title="Comparativa histórica — pendiente">
+          <div class="deco-grid" style="color:var(--blanco)"></div>
+          <div class="slide-pad">
+            <span class="tag-eyebrow on-negro gc-tag">Pregunta 4</span>
+            <h2 class="gc-title-sm ed-editable" contenteditable="true">¿Cómo han cambiado en 4 años?</h2>
+            <div class="gc-pending-lower pendiente">
+              <p class="mono">Contenido pendiente de origen</p>
+              <p class="detalle-pendiente ed-editable" contenteditable="true" style="opacity:.85">Depende de la caracterización de los 4 años; el instrumento cambió en cada aplicación y 2025 no tuvo informe redactado. Cada quiebre de comparabilidad se señalará explícitamente cuando se integre.</p>
+            </div>
+          </div>
+          <div class="firma">
+            <span class="firma-left">
+              <img src="assets/logo-faaad-blanco.png" alt="FaAADudp">
+              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
+            </span>
+            <span class="doc-tag ed-editable" contenteditable="true">2023 – 2026</span>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             17. CIERRE
+             ============================================================ -->
+        <section class="slide bg-coral" id="slide-17" data-slide-title="Cierre">
+          <div class="slide-pad">
+            <span class="tag-eyebrow on-negro gc-tag">Cierre</span>
+            <h2 class="gc-title-sm ed-editable" contenteditable="true">Qué hacer con esto</h2>
+            <div class="gc-cards">
+              <div class="asignaturas-grid">
+                <div class="asignatura-card">
+                  <span class="foco ed-editable" contenteditable="true">Abstracción y síntesis visual</span>
+                  <p class="lista ed-editable" contenteditable="true">Comunicación visual, Dibujo y observación, Geometría Aplicada</p>
+                </div>
+                <div class="asignatura-card">
+                  <span class="foco ed-editable" contenteditable="true">Diseño como disciplina proyectual</span>
+                  <p class="lista ed-editable" contenteditable="true">Taller, Visualidad y Cultura, Cultura del Diseño</p>
+                </div>
+                <div class="asignatura-card">
+                  <span class="foco ed-editable" contenteditable="true">Herramientas y competencias técnicas</span>
+                  <p class="lista ed-editable" contenteditable="true">Experimentación material, Procesos productivos, Taller, Medios de expresión digital</p>
+                </div>
+                <div class="asignatura-card">
+                  <span class="foco ed-editable" contenteditable="true">Hábitos de trabajo y criterio disciplinar</span>
+                  <p class="lista ed-editable" contenteditable="true">Todas las asignaturas, mayoritariamente Taller</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="firma">
+            <span class="firma-left">
+              <img src="assets/logo-faaad-negro.png" alt="FaAADudp">
+              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
+            </span>
+            <span class="doc-tag ed-editable" contenteditable="true">Cohorte 2026</span>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div id="ed-toasts"></div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
