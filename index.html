@@ -9,6 +9,11 @@
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js" defer></script>
+<script src="js/core/charts.js" defer></script>
+<script src="js/core/config.js" defer></script>
+<script src="js/informe/bindings.js" defer></script>
+<script src="js/core/sheet-bind.js" defer></script>
 </head>
 <body>
 
@@ -97,6 +102,19 @@
 
       <details class="ed-section" open>
         <summary class="ed-section-header">
+          <span>Tipo de gráfico</span>
+          <svg class="ed-chevron" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="ed-section-body">
+          <div class="ed-sub-group">
+            <p class="ed-hint">Cambia cómo se ve el gráfico del slide activo (el resaltado en «Navegar» al hacer scroll). Se actualiza al instante — prueba varias formas para el mismo dato antes de decidir.</p>
+          </div>
+          <div id="gc-chart-picker"><!-- generado por js/charts.js según el slide activo --></div>
+        </div>
+      </details>
+
+      <details class="ed-section" open>
+        <summary class="ed-section-header">
           <span>Insertar gráficos</span>
           <svg class="ed-chevron" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </summary>
@@ -129,7 +147,7 @@
         </summary>
         <div class="ed-section-body">
           <div class="ed-sub-group">
-            <p class="ed-hint"><strong style="color:var(--ed-text)">Exportar PDF / PPTX</strong> descarga el deck completo (las 17 slides) listo para presentar o compartir. Cada slide se captura como imagen, así que se ve idéntico al editor, pero el texto ya no es editable dentro de esos archivos — para seguir editando, usa «Guardar progreso».</p>
+            <p class="ed-hint"><strong style="color:var(--ed-text)">Exportar PDF / PPTX</strong> descarga el deck completo listo para presentar o compartir. Cada slide se captura como imagen, así que se ve idéntico al editor, pero el texto ya no es editable dentro de esos archivos — para seguir editando, usa «Guardar progreso».</p>
           </div>
           <div class="ed-sub-group">
             <p class="ed-hint"><strong style="color:var(--ed-text)">Guardar / Cargar progreso</strong> descarga o restaura un .json con tu edición completa, para retomarla otro día o el próximo año.</p>
@@ -154,13 +172,13 @@
         <section class="slide bg-negro" id="slide-1" data-slide-title="Portada">
           <div class="deco pos-br" style="background:radial-gradient(circle at 32% 30%, var(--coral), var(--azul-osc) 78%)"></div>
           <div class="slide-pad">
-            <span class="tag-eyebrow outline gc-tag ed-editable" contenteditable="true">Informe de resultados</span>
+            <span class="tag-eyebrow outline gc-tag ed-editable" contenteditable="true">Diagnóstico del Perfil de Ingreso</span>
             <h1 class="gc-hero-title ed-editable" contenteditable="true">Encuesta cohorte 2026</h1>
-            <p class="mono gc-hero-sub ed-editable" contenteditable="true" style="opacity:.6">N = 155 · sección 2</p>
+            <p class="mono gc-hero-sub ed-editable" contenteditable="true" style="opacity:.6">155 respuestas de 192 matriculados · tasa de respuesta 81%</p>
           </div>
           <div class="firma">
             <span class="firma-left">
-              <img src="assets/logo-faaad-blanco.png" alt="FaAADudp">
+              <img src="assets/img/logo-faaad-blanco.png" alt="FaAADudp">
               <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
             </span>
             <span class="doc-tag ed-editable" contenteditable="true">2026</span>
@@ -177,30 +195,35 @@
               <ul class="indice-lista">
                 <li>
                   <span class="num">01</span>
-                  <span class="pregunta ed-editable" contenteditable="true">¿Quiénes son?</span>
-                  <span class="detalle ed-editable" contenteditable="true">Caracterización</span>
+                  <span class="pregunta ed-editable" contenteditable="true">Caracterización de la muestra</span>
+                  <span class="detalle ed-editable" contenteditable="true">Quiénes son y de dónde vienen</span>
                 </li>
                 <li>
                   <span class="num">02</span>
-                  <span class="pregunta ed-editable" contenteditable="true">¿Cómo piensan?</span>
-                  <span class="detalle ed-editable" contenteditable="true">Observación y abstracción</span>
+                  <span class="pregunta ed-editable" contenteditable="true">Observación y abstracción</span>
+                  <span class="detalle ed-editable" contenteditable="true">Nivel de logro · Pregunta 1</span>
                 </li>
                 <li>
                   <span class="num">03</span>
-                  <span class="pregunta ed-editable" contenteditable="true">¿Qué traen hecho?</span>
-                  <span class="detalle ed-editable" contenteditable="true">Habilidades técnicas</span>
+                  <span class="pregunta ed-editable" contenteditable="true">Informarse con espíritu crítico</span>
+                  <span class="detalle ed-editable" contenteditable="true">Nivel de logro · Pregunta 1</span>
                 </li>
                 <li>
                   <span class="num">04</span>
-                  <span class="pregunta ed-editable" contenteditable="true">¿Cómo han cambiado en 4 años?</span>
-                  <span class="detalle ed-editable" contenteditable="true">Comparativa 2023–2026</span>
+                  <span class="pregunta ed-editable" contenteditable="true">Habilidades manuales y oficio</span>
+                  <span class="detalle ed-editable" contenteditable="true">Nivel de logro · Pregunta 1</span>
+                </li>
+                <li>
+                  <span class="num">05</span>
+                  <span class="pregunta ed-editable" contenteditable="true">Habilidades blandas</span>
+                  <span class="detalle ed-editable" contenteditable="true">Nivel de logro · Pregunta 1</span>
                 </li>
               </ul>
             </div>
           </div>
           <div class="firma">
             <span class="firma-left">
-              <img src="assets/logo-faaad-negro.png" alt="FaAADudp">
+              <img src="assets/img/logo-faaad-negro.png" alt="FaAADudp">
               <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
             </span>
             <span class="doc-tag ed-editable" contenteditable="true">Cohorte 2026</span>
@@ -208,76 +231,19 @@
         </section>
 
         <!-- ============================================================
-             3. SÍNTESIS — ASPECTOS FUERTES
+             3. DIVISOR — CARACTERIZACIÓN DE LA MUESTRA
              ============================================================ -->
-        <section class="slide bg-blanco" id="slide-3" data-slide-title="Síntesis — fuertes">
-          <div class="deco pos-br" style="color:var(--azul-osc)"><div class="deco-solid" style="width:100%;height:100%;border-radius:50%;opacity:.14"></div></div>
+        <section class="slide bg-negro" id="slide-3" data-slide-title="Divisor — Caracterización">
+          <div class="deco pos-tr" style="color:var(--azul-osc)"><div class="deco-solid" style="width:100%;height:100%;border-radius:50%"></div></div>
           <div class="slide-pad">
-            <span class="tag-eyebrow on-negro gc-tag">Síntesis general</span>
-            <h2 class="gc-title-sm ed-editable" contenteditable="true">Lo que traen instalado</h2>
-            <div class="gc-list-lower">
-              <ul class="aspectos-lista">
-                <li><span class="n-badge">01</span><span class="ed-editable" contenteditable="true">Buena base para el pensamiento visual</span></li>
-                <li><span class="n-badge">02</span><span class="ed-editable" contenteditable="true">Motivación intrínseca hacia la creación</span></li>
-                <li><span class="n-badge">03</span><span class="ed-editable" contenteditable="true">Manejo de herramientas prácticas</span></li>
-                <li><span class="n-badge">04</span><span class="ed-editable" contenteditable="true">Disposición para el trabajo colaborativo</span></li>
-              </ul>
-            </div>
+            <svg class="icon-badge gc-icon" viewBox="0 0 24 24" fill="none" stroke="var(--coral)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 20c0-4.4 3.4-7.5 7.5-7.5s7.5 3.1 7.5 7.5"/></svg>
+            <span class="tag-eyebrow on-coral" style="grid-column:2/6;grid-row:1/2;align-self:start">Sección I</span>
+            <h1 class="gc-hero-title ed-editable" contenteditable="true">Caracterización de la muestra 2026</h1>
+            <p class="parrafo gc-hero-sub ed-editable" contenteditable="true">155 respuestas a la encuesta, de 192 estudiantes matriculados válidamente.</p>
           </div>
           <div class="firma">
             <span class="firma-left">
-              <img src="assets/logo-faaad-negro.png" alt="FaAADudp">
-              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
-            </span>
-            <span class="doc-tag ed-editable" contenteditable="true">Aspectos fuertes</span>
-          </div>
-        </section>
-
-        <!-- ============================================================
-             4. SÍNTESIS — ASPECTOS A FORTALECER
-             ============================================================ -->
-        <section class="slide bg-negro" id="slide-4" data-slide-title="Síntesis — a fortalecer">
-          <div class="deco pos-br" style="color:var(--coral)"><div class="deco-solid" style="width:100%;height:100%;border-radius:50%"></div></div>
-          <div class="slide-pad">
-            <span class="tag-eyebrow on-coral gc-tag">Síntesis general</span>
-            <h2 class="gc-title-sm ed-editable" contenteditable="true">Lo que hay que trabajar</h2>
-            <div class="gc-list-lower">
-              <ul class="aspectos-lista">
-                <li><span class="n-badge">01</span><span class="ed-editable" contenteditable="true">Abstracción y síntesis visual</span></li>
-                <li><span class="n-badge">02</span><span class="ed-editable" contenteditable="true">Diseño como disciplina proyectual</span></li>
-                <li><span class="n-badge">03</span><span class="ed-editable" contenteditable="true">Herramientas y competencias técnicas</span></li>
-                <li><span class="n-badge">04</span><span class="ed-editable" contenteditable="true">Hábitos de trabajo y criterio propio</span></li>
-              </ul>
-            </div>
-          </div>
-          <div class="firma">
-            <span class="firma-left">
-              <img src="assets/logo-faaad-blanco.png" alt="FaAADudp">
-              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
-            </span>
-            <span class="doc-tag ed-editable" contenteditable="true">Aspectos a fortalecer</span>
-          </div>
-        </section>
-
-        <!-- ============================================================
-             5. SECCIÓN 1 — pendiente
-             ============================================================ -->
-        <section class="slide bg-crema" id="slide-5" data-slide-title="Sección 1 — pendiente">
-          <div class="deco-grid" style="color:var(--negro)"></div>
-          <div class="slide-pad">
-            <span class="tag-eyebrow on-negro gc-tag">
-              <svg class="eyebrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 20c0-4.4 3.4-7.5 7.5-7.5s7.5 3.1 7.5 7.5"/></svg>
-              Sección 1
-            </span>
-            <h2 class="gc-title-sm ed-editable" contenteditable="true">¿Quiénes son?</h2>
-            <div class="gc-pending-lower pendiente">
-              <p class="mono">Contenido pendiente de origen</p>
-              <p class="detalle-pendiente ed-editable" contenteditable="true">Los datos de caracterización 2026 viven en un documento aparte (PowerPoint) y aún no están integrados a este deck.</p>
-            </div>
-          </div>
-          <div class="firma">
-            <span class="firma-left">
-              <img src="assets/logo-faaad-negro.png" alt="FaAADudp">
+              <img src="assets/img/logo-faaad-blanco.png" alt="FaAADudp">
               <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
             </span>
             <span class="doc-tag ed-editable" contenteditable="true">Caracterización</span>
@@ -285,282 +251,563 @@
         </section>
 
         <!-- ============================================================
-             6. SECCIÓN 2 — divisor
+             4. TASA DE RESPUESTA
              ============================================================ -->
-        <section class="slide bg-negro" id="slide-6" data-slide-title="Sección 2 — divisor">
-          <div class="deco pos-tr" style="color:var(--azul-osc)"><div class="deco-solid" style="width:100%;height:100%;border-radius:50%"></div></div>
-          <div class="slide-pad">
-            <svg class="icon-badge gc-icon" viewBox="0 0 24 24" fill="none" stroke="var(--coral)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12c3-5.3 8-8 10-8s7 2.7 10 8c-3 5.3-8 8-10 8s-7-2.7-10-8Z"/><circle cx="12" cy="12" r="3"/></svg>
-            <span class="tag-eyebrow on-coral" style="grid-column:2/6;grid-row:1/2;align-self:start">Sección 2</span>
-            <h1 class="gc-hero-title ed-editable" contenteditable="true">¿Cómo piensan?</h1>
-            <p class="parrafo gc-hero-sub ed-editable" contenteditable="true">Observación y abstracción visual — reconocimiento de patrones.</p>
-          </div>
-          <div class="firma">
-            <span class="firma-left">
-              <img src="assets/logo-faaad-blanco.png" alt="FaAADudp">
-              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
-            </span>
-            <span class="doc-tag ed-editable" contenteditable="true">N = 155</span>
-          </div>
-        </section>
-
-        <!-- ============================================================
-             7. SECCIÓN 2 — P1 (Continuidad)
-             ============================================================ -->
-        <section class="slide bg-blanco" id="slide-7" data-slide-title="Sección 2 — P1">
+        <section class="slide bg-blanco" id="slide-4" data-slide-title="Tasa de respuesta">
           <div class="deco pos-br" style="color:var(--coral)"><div class="deco-solid" style="width:100%;height:100%;border-radius:50%;opacity:.12"></div></div>
           <div class="slide-pad">
-            <span class="tag-eyebrow on-negro gc-tag">Pregunta 1 · N = 155</span>
-            <p class="stat-huge gc-stat ed-editable ed-pct-standalone" contenteditable="true" style="color:var(--coral)">73%</p>
-            <p class="stat-caption gc-caption-upper ed-editable" contenteditable="true">Reconoce el patrón de <strong>Continuidad</strong> en una secuencia de formas — logro satisfactorio.</p>
-            <div class="gc-bars-under">
+            <span class="tag-eyebrow on-negro gc-tag">Muestra · cohorte 2026</span>
+            <p class="stat-huge gc-stat-inline ed-editable ed-pct-standalone" contenteditable="true" style="color:var(--coral)">81%</p>
+            <p class="stat-caption gc-caption-inline ed-editable" contenteditable="true">de tasa de respuesta: <strong>155 estudiantes</strong> respondieron la encuesta, de <strong>192 matriculados</strong> válidamente en la cohorte 2026.</p>
+            <div class="gc-bars-wide gc-chart" data-form="pictogram" data-label="Cobertura del estudio" data-variants='{
+              "pictogram": {"total":192,"segments":[{"count":155,"color":"#FF6C53","label":"Respondió"},{"count":37,"hollow":true,"label":"No respondió"}]},
+              "band": {"segments":[{"label":"Respondió","value":80.7,"display":"155","fill":"#FF6C53"},{"label":"No respondió","value":19.3,"display":"37","hollow":true}]}
+            }'></div>
+          </div>
+          <div class="firma">
+            <span class="firma-left">
+              <img src="assets/img/logo-faaad-negro.png" alt="FaAADudp">
+              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
+            </span>
+            <span class="doc-tag ed-editable" contenteditable="true">Caracterización</span>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             5. EDAD
+             ============================================================ -->
+        <section class="slide bg-crema" id="slide-5" data-slide-title="Edad">
+          <div class="slide-pad">
+            <span class="tag-eyebrow on-negro gc-tag">¿Cuántos años tienes? · 155 respuestas</span>
+            <p class="stat-huge gc-stat-inline ed-editable ed-pct-standalone" contenteditable="true" style="color:var(--coral)">72,2%</p>
+            <p class="stat-caption gc-caption-inline ed-editable" contenteditable="true">se encuentra dentro del <strong>rango etario estándar esperado</strong> para el ingreso a la educación superior. Un grupo menor está entre los 20 y 24 años.</p>
+            <div class="gc-bars-wide gc-chart" data-form="ring" data-label="Edad" data-variants='{
+              "ring": {"pct":72.2,"accent":"#FF6C53","label":"rango etario estándar esperado","satellites":[{"label":"20–24 años","note":"grupo menor · sin cifra","hollow":true},{"label":"Más de 24 años","note":"1,3% · 2 estudiantes"}]},
+              "band": {"segments":[{"label":"Rango estándar","value":72.2,"display":"72,2%","fill":"#FF6C53"},{"label":"20–24 años","value":26.5,"display":"grupo menor","fill":"#1C1C1C"},{"label":"Más de 24 años","value":1.3,"display":"1,3%","hollow":true}]}
+            }'></div>
+          </div>
+          <div class="firma">
+            <span class="firma-left">
+              <img src="assets/img/logo-faaad-negro.png" alt="FaAADudp">
+              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
+            </span>
+            <span class="doc-tag ed-editable" contenteditable="true">Caracterización</span>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             6. ESTUDIOS PREVIOS
+             ============================================================ -->
+        <section class="slide bg-blanco" id="slide-6" data-slide-title="Estudios previos">
+          <div class="deco pos-br" style="color:var(--azul-osc)"><div class="deco-solid" style="width:100%;height:100%;border-radius:50%;opacity:.12"></div></div>
+          <div class="slide-pad">
+            <span class="tag-eyebrow on-negro gc-tag">Estudios previos · 155 respuestas</span>
+            <p class="stat-huge gc-stat-inline ed-editable ed-pct-standalone" contenteditable="true" style="color:var(--coral)">83,2%</p>
+            <p class="stat-caption gc-caption-inline ed-editable" contenteditable="true">no posee estudios de educación superior previos. Del grupo que sí tuvo estudios previos, solo un <strong>1,9% (3 estudiantes)</strong> cursó estudios de Diseño.</p>
+            <div class="gc-bars-wide gc-chart" data-form="pictogram" data-label="Estudios previos" data-variants='{
+              "pictogram": {"total":155,"segments":[{"count":129,"color":"#1C1C1C","label":"Sin estudios previos"},{"count":23,"color":"#99B0C9","label":"Con estudios previos, otra área"},{"count":3,"color":"#FF6C53","label":"Estudios previos en Diseño"}]},
+              "band": {"segments":[{"label":"Sin estudios previos","value":83.2,"display":"83,2%","fill":"#1C1C1C"},{"label":"Con estudios, otra área","value":14.9,"display":"≈14,9%","fill":"#99B0C9"},{"label":"Estudios en Diseño","value":1.9,"display":"1,9%","fill":"#FF6C53"}]}
+            }'></div>
+          </div>
+          <div class="firma">
+            <span class="firma-left">
+              <img src="assets/img/logo-faaad-negro.png" alt="FaAADudp">
+              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
+            </span>
+            <span class="doc-tag ed-editable" contenteditable="true">Caracterización</span>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             7. GÉNERO
+             ============================================================ -->
+        <section class="slide bg-azul" id="slide-7" data-slide-title="Género">
+          <div class="slide-pad">
+            <span class="tag-eyebrow on-coral gc-tag">¿Con qué género te identificas? · 155 respuestas</span>
+            <p class="stat-huge gc-stat-inline ed-editable ed-pct-standalone" contenteditable="true" style="color:var(--coral)">72,9%</p>
+            <p class="stat-caption gc-caption-inline ed-editable" contenteditable="true">se identifica como <strong>mujer</strong>. Existe un grupo creciente que se identifica con un género no conforme.</p>
+            <div class="gc-bars-wide gc-chart" data-form="swarm" data-label="Género" data-variants='{
+              "swarm": {"items":[{"label":"Mujer","n":113,"display":"72,9%","color":"#FF6C53"},{"label":"Hombre","n":33,"display":"21,3%","color":"#FFFFFF"},{"label":"No conforme","n":9,"display":"≈5,8%","hollow":true}],"note":"155 puntos = 155 personas"},
+              "band": {"segments":[{"label":"Mujer","value":72.9,"display":"72,9%","fill":"#FF6C53"},{"label":"Hombre","value":21.3,"display":"21,3%","fill":"#FFFFFF"},{"label":"No conforme","value":5.8,"display":"≈5,8%","hollow":true}]},
+              "rankedBars": {"items":[{"label":"Mujer","value":72.9,"display":"72,9%","color":"#FF6C53"},{"label":"Hombre","value":21.3,"display":"21,3%","color":"#FFFFFF"},{"label":"No conforme","value":5.8,"display":"≈5,8%","color":"#FFFFFF"}]}
+            }'></div>
+          </div>
+          <div class="firma">
+            <span class="firma-left">
+              <img src="assets/img/logo-faaad-blanco.png" alt="FaAADudp">
+              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
+            </span>
+            <span class="doc-tag ed-editable" contenteditable="true">Caracterización</span>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             8. REGIÓN DE RESIDENCIA
+             ============================================================ -->
+        <section class="slide bg-crema" id="slide-8" data-slide-title="Región de residencia">
+          <div class="slide-pad">
+            <span class="tag-eyebrow on-negro gc-tag">Región de residencia antes de entrar a la UDP · 155 respuestas</span>
+            <p class="stat-huge gc-stat-inline ed-editable ed-pct-standalone" contenteditable="true" style="color:var(--coral)">85,2%</p>
+            <p class="stat-caption gc-caption-inline ed-editable" contenteditable="true">proviene y se mantiene en la <strong>Región Metropolitana</strong>.</p>
+            <div class="gc-bars-wide">
               <ul class="barras">
-                <li class="barra-fila" style="--pct:72.9">
-                  <span class="barra-label ed-editable" contenteditable="true">Continuidad</span>
-                  <span class="barra-track"><span class="barra-fill"></span></span>
-                  <span class="barra-valor ed-editable ed-pct" contenteditable="true">72,9%</span>
-                </li>
-                <li class="barra-fila" style="--pct:24.5">
-                  <span class="barra-label ed-editable" contenteditable="true">Ritmo</span>
-                  <span class="barra-track"><span class="barra-fill" style="background:var(--azul-osc)"></span></span>
-                  <span class="barra-valor ed-editable ed-pct" contenteditable="true">24,5%</span>
-                </li>
+                <li class="barra-fila" style="--pct:85.2"><span class="barra-label ed-editable" contenteditable="true">Región Metropolitana</span><span class="barra-track"><span class="barra-fill"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">85,2%</span></li>
+                <li class="barra-fila" style="--pct:3.2"><span class="barra-label ed-editable" contenteditable="true">Libertador Bdo. O'Higgins</span><span class="barra-track"><span class="barra-fill" style="background:var(--azul-osc)"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">3,2%</span></li>
+                <li class="barra-fila" style="--pct:1.9"><span class="barra-label ed-editable" contenteditable="true">Valparaíso</span><span class="barra-track"><span class="barra-fill" style="background:var(--azul-osc)"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">1,9%</span></li>
+                <li class="barra-fila" style="--pct:1.9"><span class="barra-label ed-editable" contenteditable="true">Maule</span><span class="barra-track"><span class="barra-fill" style="background:var(--azul-osc)"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">1,9%</span></li>
               </ul>
             </div>
           </div>
           <div class="firma">
             <span class="firma-left">
-              <img src="assets/logo-faaad-negro.png" alt="FaAADudp">
+              <img src="assets/img/logo-faaad-negro.png" alt="FaAADudp">
               <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
             </span>
-            <span class="doc-tag ed-editable" contenteditable="true">Observación y abstracción</span>
+            <span class="doc-tag ed-editable" contenteditable="true">Caracterización</span>
           </div>
         </section>
 
         <!-- ============================================================
-             8. SECCIÓN 2 — P2 (Colaboración)
+             9. COMUNAS DE SANTIAGO
              ============================================================ -->
-        <section class="slide bg-coral" id="slide-8" data-slide-title="Sección 2 — P2">
+        <section class="slide bg-blanco" id="slide-9" data-slide-title="Comunas de Santiago">
           <div class="slide-pad">
-            <span class="tag-eyebrow on-negro gc-tag">Pregunta 2 · N = 155</span>
-            <p class="stat-huge gc-stat ed-editable ed-pct-standalone" contenteditable="true">86%</p>
-            <p class="stat-caption gc-caption ed-editable" contenteditable="true">Asocia correctamente una figura con el concepto <strong>Colaboración</strong> — logro satisfactorio.</p>
+            <span class="tag-eyebrow on-negro gc-tag">Comuna de residencia en Santiago · 155 respuestas</span>
+            <p class="stat-huge gc-stat-inline ed-editable ed-pct-standalone" contenteditable="true" style="color:var(--coral)">9%</p>
+            <p class="stat-caption gc-caption-inline ed-editable" contenteditable="true">Maipú concentra la mayor proporción. Vuelven a aparecer comunas del sector oriente: Las Condes, Vitacura, Lo Barnechea, La Reina.</p>
+            <div class="gc-bars-wide">
+              <ul class="barras">
+                <li class="barra-fila" style="--pct:9"><span class="barra-label ed-editable" contenteditable="true">Maipú</span><span class="barra-track"><span class="barra-fill"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">9%</span></li>
+                <li class="barra-fila" style="--pct:7.1"><span class="barra-label ed-editable" contenteditable="true">Santiago</span><span class="barra-track"><span class="barra-fill"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">7,1%</span></li>
+                <li class="barra-fila" style="--pct:6.5"><span class="barra-label ed-editable" contenteditable="true">Peñalolén</span><span class="barra-track"><span class="barra-fill"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">6,5%</span></li>
+                <li class="barra-fila" style="--pct:5.8"><span class="barra-label ed-editable" contenteditable="true">Ñuñoa / Puente Alto</span><span class="barra-track"><span class="barra-fill"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">5,8%</span></li>
+                <li class="barra-fila" style="--pct:4.5"><span class="barra-label ed-editable" contenteditable="true">Providencia / Pudahuel</span><span class="barra-track"><span class="barra-fill"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">4,5%</span></li>
+              </ul>
+            </div>
           </div>
           <div class="firma">
             <span class="firma-left">
-              <img src="assets/logo-faaad-negro.png" alt="FaAADudp">
+              <img src="assets/img/logo-faaad-negro.png" alt="FaAADudp">
               <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
             </span>
-            <span class="doc-tag ed-editable" contenteditable="true">Observación y abstracción</span>
+            <span class="doc-tag ed-editable" contenteditable="true">Caracterización</span>
           </div>
         </section>
 
         <!-- ============================================================
-             9. SECCIÓN 2 — P3 (ojo humano)
+             10. CÓMO SE ENTERÓ DE LA ESCUELA
              ============================================================ -->
-        <section class="slide bg-azul" id="slide-9" data-slide-title="Sección 2 — P3">
+        <section class="slide bg-negro" id="slide-10" data-slide-title="Cómo se enteró de la Escuela">
           <div class="slide-pad">
-            <span class="tag-eyebrow on-coral gc-tag">Pregunta 3 · N = 155</span>
-            <p class="stat-huge gc-stat ed-editable ed-pct-standalone" contenteditable="true" style="color:var(--coral)">61%</p>
-            <p class="stat-caption gc-caption ed-editable" contenteditable="true">Sintetiza visualmente la idea de un <strong>ojo humano</strong> — logro suficiente.</p>
+            <span class="tag-eyebrow on-coral gc-tag">¿Cómo te enteraste de la Escuela de Diseño UDP? · 155 respuestas · marca todas</span>
+            <p class="stat-huge gc-stat-inline ed-editable ed-pct-standalone" contenteditable="true" style="color:var(--coral)">49,7%</p>
+            <p class="stat-caption gc-caption-inline ed-editable" contenteditable="true">llegó por un <strong>familiar, amigx o conocidx</strong> — el boca a boca es la vía principal. Cifras en menciones sobre 155 respuestas.</p>
+            <div class="gc-bars-wide gc-chart" data-form="burst" data-label="Vía de contacto" data-variants='{
+              "burst": {"accent":"#FF6C53","center":"155","items":[
+                {"label":"Familiar/amigx/conocidx","value":49.7,"display":"77 · 49,7%"},
+                {"label":"Redes sociales","value":30.3,"display":"47 · 30,3%"},
+                {"label":"Sitio web institucional","value":27.7,"display":"43 · 27,7%"},
+                {"label":"Feria carreras UDP","value":24.5,"display":"38 · 24,5%"},
+                {"label":"Feria universidades","value":23.2,"display":"36 · 23,2%"},
+                {"label":"Visita UDP→colegio","value":12.9,"display":"20 · 12,9%"},
+                {"label":"Visita colegio→UDP","value":5.8,"display":"9 · 5,8%"},
+                {"label":"Prensa","value":3.2,"display":"5 · 3,2%"}
+              ]},
+              "rankedBars": {"items":[
+                {"label":"Familiar/amigx/conocidx","value":49.7,"display":"77 · 49,7%","color":"#FF6C53"},
+                {"label":"Redes sociales","value":30.3,"display":"47 · 30,3%","color":"#FFFFFF"},
+                {"label":"Sitio web institucional","value":27.7,"display":"43 · 27,7%","color":"#FFFFFF"},
+                {"label":"Feria carreras UDP","value":24.5,"display":"38 · 24,5%","color":"#FFFFFF"},
+                {"label":"Feria universidades","value":23.2,"display":"36 · 23,2%","color":"#FFFFFF"},
+                {"label":"Visita UDP→colegio","value":12.9,"display":"20 · 12,9%","color":"#FFFFFF"},
+                {"label":"Visita colegio→UDP","value":5.8,"display":"9 · 5,8%","color":"#FFFFFF"},
+                {"label":"Prensa","value":3.2,"display":"5 · 3,2%","color":"#FFFFFF"}
+              ]},
+              "swarm": {"items":[
+                {"label":"Familiar","n":77,"display":"77","color":"#FF6C53"},
+                {"label":"Redes sociales","n":47,"display":"47","color":"#FFFFFF"},
+                {"label":"Sitio web","n":43,"display":"43","color":"#FFFFFF"},
+                {"label":"Feria UDP","n":38,"display":"38","color":"#FFFFFF"},
+                {"label":"Feria univ.","n":36,"display":"36","color":"#FFFFFF"},
+                {"label":"Visita UDP→col.","n":20,"display":"20","color":"#FFFFFF"},
+                {"label":"Visita col.→UDP","n":9,"display":"9","color":"#FFFFFF"},
+                {"label":"Prensa","n":5,"display":"5","color":"#FFFFFF"}
+              ], "note":"Cada punto = 1 mención"}
+            }'></div>
           </div>
           <div class="firma">
             <span class="firma-left">
-              <img src="assets/logo-faaad-blanco.png" alt="FaAADudp">
+              <img src="assets/img/logo-faaad-blanco.png" alt="FaAADudp">
               <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
             </span>
-            <span class="doc-tag ed-editable" contenteditable="true">Observación y abstracción</span>
+            <span class="doc-tag ed-editable" contenteditable="true">Caracterización</span>
           </div>
         </section>
 
         <!-- ============================================================
-             10. SECCIÓN 2 — P4 (bicicleta texto)
+             11. EXPERIENCIAS DE APRENDIZAJE ESCOLAR (PREGUNTA NUEVA 2026)
              ============================================================ -->
-        <section class="slide bg-negro" id="slide-10" data-slide-title="Sección 2 — P4">
+        <section class="slide bg-crema" id="slide-11" data-slide-title="Experiencias de aprendizaje escolar">
           <div class="slide-pad">
-            <span class="tag-eyebrow on-coral gc-tag">Pregunta 4 · N = 155</span>
-            <p class="stat-huge gc-stat ed-editable ed-pct-standalone" contenteditable="true" style="color:var(--coral)">38%</p>
-            <p class="stat-caption gc-caption ed-editable" contenteditable="true">Explica una bicicleta por sus <strong>relaciones funcionales</strong>, no solo por sus partes — logro insuficiente.</p>
+            <span class="tag-eyebrow on-negro gc-tag">Experiencias de aprendizaje escolar · pregunta nueva 2026 · 155 respuestas · más de una alternativa</span>
+            <p class="stat-huge gc-stat-inline ed-editable ed-pct-standalone" contenteditable="true" style="color:var(--coral)">78,7%</p>
+            <p class="stat-caption gc-caption-inline ed-editable" contenteditable="true">tuvo contacto con el <strong>trabajo en equipo</strong> durante su experiencia escolar. Cifras en menciones sobre 155 respuestas.</p>
+            <div class="gc-bars-wide gc-chart" data-form="burst" data-label="Experiencias de aprendizaje" data-variants='{
+              "burst": {"accent":"#FF6C53","center":"155","items":[
+                {"label":"Trabajar en equipo","value":78.7,"display":"122 · 78,7%"},
+                {"label":"Investigación","value":76.8,"display":"119 · 76,8%"},
+                {"label":"Clases expositivas","value":65.2,"display":"101 · 65,2%"},
+                {"label":"Crear proyectos","value":55.5,"display":"86 · 55,5%"},
+                {"label":"Maquetas/prototipos","value":55.5,"display":"86 · 55,5%"},
+                {"label":"Combinar disciplinas","value":45.2,"display":"70 · 45,2%"},
+                {"label":"Generar ideas","value":45.2,"display":"70 · 45,2%"},
+                {"label":"Ninguna","value":1.3,"display":"2 · 1,3%"}
+              ]},
+              "rankedBars": {"items":[
+                {"label":"Trabajar en equipo","value":78.7,"display":"122 · 78,7%","color":"#FF6C53"},
+                {"label":"Investigación","value":76.8,"display":"119 · 76,8%","color":"#1C1C1C"},
+                {"label":"Clases expositivas","value":65.2,"display":"101 · 65,2%","color":"#1C1C1C"},
+                {"label":"Crear proyectos","value":55.5,"display":"86 · 55,5%","color":"#1C1C1C"},
+                {"label":"Maquetas/prototipos","value":55.5,"display":"86 · 55,5%","color":"#1C1C1C"},
+                {"label":"Combinar disciplinas","value":45.2,"display":"70 · 45,2%","color":"#1C1C1C"},
+                {"label":"Generar ideas","value":45.2,"display":"70 · 45,2%","color":"#1C1C1C"},
+                {"label":"Ninguna","value":1.3,"display":"2 · 1,3%","color":"#1C1C1C"}
+              ]},
+              "swarm": {"items":[
+                {"label":"Trabajo en equipo","n":122,"display":"122","color":"#FF6C53"},
+                {"label":"Investigación","n":119,"display":"119","color":"#1C1C1C"},
+                {"label":"Clases exposit.","n":101,"display":"101","color":"#1C1C1C"},
+                {"label":"Crear proyectos","n":86,"display":"86","color":"#1C1C1C"},
+                {"label":"Maquetas","n":86,"display":"86","color":"#1C1C1C"},
+                {"label":"Combinar disc.","n":70,"display":"70","color":"#1C1C1C"},
+                {"label":"Generar ideas","n":70,"display":"70","color":"#1C1C1C"},
+                {"label":"Ninguna","n":2,"display":"2","hollow":true}
+              ], "note":"Cada punto = 1 mención"}
+            }'></div>
           </div>
           <div class="firma">
             <span class="firma-left">
-              <img src="assets/logo-faaad-blanco.png" alt="FaAADudp">
+              <img src="assets/img/logo-faaad-negro.png" alt="FaAADudp">
               <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
             </span>
-            <span class="doc-tag ed-editable" contenteditable="true">Observación y abstracción</span>
+            <span class="doc-tag ed-editable" contenteditable="true">Caracterización</span>
           </div>
         </section>
 
         <!-- ============================================================
-             11. SECCIÓN 2 — P5 (reformular)
+             12. DIVISOR + ESCALA DE NIVELES DE LOGRO
              ============================================================ -->
-        <section class="slide bg-crema" id="slide-11" data-slide-title="Sección 2 — P5">
-          <div class="deco pos-br" style="color:var(--coral)"><div class="deco-solid" style="width:100%;height:100%;border-radius:50%;opacity:.16"></div></div>
-          <div class="slide-pad">
-            <span class="tag-eyebrow on-negro gc-tag">Pregunta 5 · N = 155</span>
-            <h2 class="gc-hero-title ed-editable" contenteditable="true">No hay lectura clara</h2>
-            <p class="stat-caption gc-caption-below ed-editable" contenteditable="true" style="font-size:1.7cqw;max-width:44ch">La formulación generó ambigüedad entre dos alternativas de representación de bicicleta. <strong style="color:var(--coral)">Se recomienda reformular</strong> antes de la próxima aplicación.</p>
-          </div>
-          <div class="firma">
-            <span class="firma-left">
-              <img src="assets/logo-faaad-negro.png" alt="FaAADudp">
-              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
-            </span>
-            <span class="doc-tag ed-editable" contenteditable="true">Observación y abstracción</span>
-          </div>
-        </section>
-
-        <!-- ============================================================
-             12. SECCIÓN 4 — divisor
-             ============================================================ -->
-        <section class="slide bg-negro" id="slide-12" data-slide-title="Sección 4 — divisor">
+        <section class="slide bg-negro" id="slide-12" data-slide-title="Escala de niveles de logro">
           <div class="deco pos-tr" style="color:var(--coral)"><div class="deco-solid" style="width:100%;height:100%;border-radius:50%"></div></div>
           <div class="slide-pad">
-            <svg class="icon-badge gc-icon" viewBox="0 0 24 24" fill="none" stroke="var(--coral)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="10.5" rx="1"/><path d="M1.5 18.5h21L20.5 21h-17L1.5 18.5Z"/></svg>
-            <span class="tag-eyebrow on-coral" style="grid-column:2/6;grid-row:1/2;align-self:start">Sección 4</span>
-            <h1 class="gc-hero-title ed-editable" contenteditable="true">¿Qué traen hecho?</h1>
-            <p class="parrafo gc-hero-sub ed-editable" contenteditable="true">Hobbies, técnicas y herramientas con las que ya llegan.</p>
-          </div>
-          <div class="firma">
-            <span class="firma-left">
-              <img src="assets/logo-faaad-blanco.png" alt="FaAADudp">
-              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
-            </span>
-            <span class="doc-tag ed-editable" contenteditable="true">Menciones, no % de N</span>
-          </div>
-        </section>
-
-        <!-- ============================================================
-             13. SECCIÓN 4 — hobbies
-             ============================================================ -->
-        <section class="slide bg-blanco" id="slide-13" data-slide-title="Sección 4 — hobbies">
-          <div class="slide-pad">
-            <span class="tag-eyebrow on-negro gc-tag">Disciplinas y hobbies</span>
-            <p class="stat-huge gc-stat-inline ed-editable ed-pct-standalone" contenteditable="true" style="color:var(--coral);font-size:7cqw">88</p>
-            <p class="stat-caption gc-caption-inline ed-editable" contenteditable="true">menciones en <strong>Artes visuales e ilustración</strong>, la categoría líder</p>
-            <div class="gc-bars-wide">
-              <ul class="barras">
-                <li class="barra-fila" style="--pct:100"><span class="barra-label ed-editable" contenteditable="true">Artes visuales e ilustración</span><span class="barra-track"><span class="barra-fill"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">88</span></li>
-                <li class="barra-fila" style="--pct:47.7"><span class="barra-label ed-editable" contenteditable="true">Música y artes escénicas</span><span class="barra-track"><span class="barra-fill" style="background:var(--azul-osc)"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">42</span></li>
-                <li class="barra-fila" style="--pct:38.6"><span class="barra-label ed-editable" contenteditable="true">Fotografía y producción audiovisual</span><span class="barra-track"><span class="barra-fill" style="background:var(--azul-osc)"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">34</span></li>
-                <li class="barra-fila" style="--pct:35.2"><span class="barra-label ed-editable" contenteditable="true">Manualidades y oficios</span><span class="barra-track"><span class="barra-fill" style="background:var(--azul-osc)"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">31</span></li>
-              </ul>
-            </div>
-          </div>
-          <div class="firma">
-            <span class="firma-left">
-              <img src="assets/logo-faaad-negro.png" alt="FaAADudp">
-              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
-            </span>
-            <span class="doc-tag ed-editable" contenteditable="true">Habilidades técnicas</span>
-          </div>
-        </section>
-
-        <!-- ============================================================
-             14. SECCIÓN 4 — técnicas
-             ============================================================ -->
-        <section class="slide bg-crema" id="slide-14" data-slide-title="Sección 4 — técnicas">
-          <div class="slide-pad">
-            <span class="tag-eyebrow on-negro gc-tag">Técnicas que ya han trabajado</span>
-            <p class="stat-huge gc-stat-inline ed-editable ed-pct-standalone" contenteditable="true" style="color:var(--coral);font-size:7cqw">79</p>
-            <p class="stat-caption gc-caption-inline ed-editable" contenteditable="true">menciones en <strong>Técnicas gráficas y pictóricas</strong> — predomina lo tradicional</p>
-            <div class="gc-bars-wide">
-              <ul class="barras">
-                <li class="barra-fila" style="--pct:100"><span class="barra-label ed-editable" contenteditable="true">Técnicas gráficas y pictóricas</span><span class="barra-track"><span class="barra-fill"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">79</span></li>
-                <li class="barra-fila" style="--pct:45.6"><span class="barra-label ed-editable" contenteditable="true">Técnicas textiles</span><span class="barra-track"><span class="barra-fill" style="background:var(--azul-osc)"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">36</span></li>
-                <li class="barra-fila" style="--pct:36.7"><span class="barra-label ed-editable" contenteditable="true">Técnicas tridimensionales</span><span class="barra-track"><span class="barra-fill" style="background:var(--azul-osc)"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">29</span></li>
-                <li class="barra-fila" style="--pct:30.4"><span class="barra-label ed-editable" contenteditable="true">Fotografía e impresión</span><span class="barra-track"><span class="barra-fill" style="background:var(--azul-osc)"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">24</span></li>
-              </ul>
-            </div>
-          </div>
-          <div class="firma">
-            <span class="firma-left">
-              <img src="assets/logo-faaad-negro.png" alt="FaAADudp">
-              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
-            </span>
-            <span class="doc-tag ed-editable" contenteditable="true">Habilidades técnicas</span>
-          </div>
-        </section>
-
-        <!-- ============================================================
-             15. SECCIÓN 4 — herramientas digitales
-             ============================================================ -->
-        <section class="slide bg-negro" id="slide-15" data-slide-title="Sección 4 — herramientas">
-          <div class="slide-pad">
-            <span class="tag-eyebrow on-coral gc-tag">Herramientas digitales</span>
-            <p class="stat-huge gc-stat-inline ed-editable ed-pct-standalone" contenteditable="true" style="color:var(--coral);font-size:7cqw">132</p>
-            <p class="stat-caption gc-caption-inline ed-editable" contenteditable="true">menciones en <strong>herramientas de productividad</strong> — IA generativa ya suma 61</p>
-            <div class="gc-bars-wide">
-              <ul class="barras">
-                <li class="barra-fila" style="--pct:100"><span class="barra-label ed-editable" contenteditable="true">Herramientas de productividad</span><span class="barra-track"><span class="barra-fill"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">132</span></li>
-                <li class="barra-fila" style="--pct:56.1"><span class="barra-label ed-editable" contenteditable="true">Software de diseño gráfico</span><span class="barra-track"><span class="barra-fill" style="background:var(--blanco)"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">74</span></li>
-                <li class="barra-fila" style="--pct:46.2"><span class="barra-label ed-editable" contenteditable="true">IA generativa</span><span class="barra-track"><span class="barra-fill" style="background:var(--blanco)"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">61</span></li>
-                <li class="barra-fila" style="--pct:27.3"><span class="barra-label ed-editable" contenteditable="true">Edición audiovisual</span><span class="barra-track"><span class="barra-fill" style="background:var(--blanco)"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">36</span></li>
-              </ul>
-            </div>
-          </div>
-          <div class="firma">
-            <span class="firma-left">
-              <img src="assets/logo-faaad-blanco.png" alt="FaAADudp">
-              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
-            </span>
-            <span class="doc-tag ed-editable" contenteditable="true">Habilidades técnicas</span>
-          </div>
-        </section>
-
-        <!-- ============================================================
-             16. COMPARATIVA HISTÓRICA — pendiente
-             ============================================================ -->
-        <section class="slide bg-azul" id="slide-16" data-slide-title="Comparativa histórica — pendiente">
-          <div class="deco-grid" style="color:var(--blanco)"></div>
-          <div class="slide-pad">
-            <span class="tag-eyebrow on-negro gc-tag">Pregunta 4</span>
-            <h2 class="gc-title-sm ed-editable" contenteditable="true">¿Cómo han cambiado en 4 años?</h2>
-            <div class="gc-pending-lower pendiente">
-              <p class="mono">Contenido pendiente de origen</p>
-              <p class="detalle-pendiente ed-editable" contenteditable="true" style="opacity:.85">Depende de la caracterización de los 4 años; el instrumento cambió en cada aplicación y 2025 no tuvo informe redactado. Cada quiebre de comparabilidad se señalará explícitamente cuando se integre.</p>
-            </div>
-          </div>
-          <div class="firma">
-            <span class="firma-left">
-              <img src="assets/logo-faaad-blanco.png" alt="FaAADudp">
-              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
-            </span>
-            <span class="doc-tag ed-editable" contenteditable="true">2023 – 2026</span>
-          </div>
-        </section>
-
-        <!-- ============================================================
-             17. CIERRE
-             ============================================================ -->
-        <section class="slide bg-coral" id="slide-17" data-slide-title="Cierre">
-          <div class="slide-pad">
-            <span class="tag-eyebrow on-negro gc-tag">Cierre</span>
-            <h2 class="gc-title-sm ed-editable" contenteditable="true">Qué hacer con esto</h2>
-            <div class="gc-cards">
-              <div class="asignaturas-grid">
-                <div class="asignatura-card">
-                  <span class="foco ed-editable" contenteditable="true">Abstracción y síntesis visual</span>
-                  <p class="lista ed-editable" contenteditable="true">Comunicación visual, Dibujo y observación, Geometría Aplicada</p>
+            <span class="tag-eyebrow on-coral gc-tag">Sección II · Pregunta 1 · N = 155</span>
+            <h2 class="gc-title-sm ed-editable" contenteditable="true">Escala de apreciación de niveles de logro</h2>
+            <div class="gc-escala">
+              <div class="escala-grid">
+                <div class="escala-item">
+                  <span class="niv ed-editable" contenteditable="true">Nivel I</span>
+                  <span class="rango ed-editable" contenteditable="true">Bajo el 60%</span>
+                  <span class="desc ed-editable" contenteditable="true">Logro insuficiente para cursar el ciclo inicial.</span>
                 </div>
-                <div class="asignatura-card">
-                  <span class="foco ed-editable" contenteditable="true">Diseño como disciplina proyectual</span>
-                  <p class="lista ed-editable" contenteditable="true">Taller, Visualidad y Cultura, Cultura del Diseño</p>
+                <div class="escala-item">
+                  <span class="niv ed-editable" contenteditable="true">Nivel II</span>
+                  <span class="rango ed-editable" contenteditable="true">Entre 60% y 80%</span>
+                  <span class="desc ed-editable" contenteditable="true">Logro suficiente para cursar el ciclo inicial.</span>
                 </div>
-                <div class="asignatura-card">
-                  <span class="foco ed-editable" contenteditable="true">Herramientas y competencias técnicas</span>
-                  <p class="lista ed-editable" contenteditable="true">Experimentación material, Procesos productivos, Taller, Medios de expresión digital</p>
-                </div>
-                <div class="asignatura-card">
-                  <span class="foco ed-editable" contenteditable="true">Hábitos de trabajo y criterio disciplinar</span>
-                  <p class="lista ed-editable" contenteditable="true">Todas las asignaturas, mayoritariamente Taller</p>
+                <div class="escala-item">
+                  <span class="niv ed-editable" contenteditable="true">Nivel III</span>
+                  <span class="rango ed-editable" contenteditable="true">Sobre el 80%</span>
+                  <span class="desc ed-editable" contenteditable="true">Logro satisfactorio para cursar el ciclo inicial.</span>
                 </div>
               </div>
             </div>
           </div>
           <div class="firma">
             <span class="firma-left">
-              <img src="assets/logo-faaad-negro.png" alt="FaAADudp">
+              <img src="assets/img/logo-faaad-blanco.png" alt="FaAADudp">
+              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
+            </span>
+            <span class="doc-tag ed-editable" contenteditable="true">Perfil de ingreso · P1</span>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             13. ÁMBITO 1 — OBSERVACIÓN Y ABSTRACCIÓN
+             ============================================================ -->
+        <section class="slide bg-blanco" id="slide-13" data-slide-title="Observación y abstracción">
+          <div class="slide-pad">
+            <span class="tag-eyebrow on-negro gc-tag">1 · Observación y abstracción · Nivel II — Suficiente</span>
+            <p class="stat-huge gc-stat-inline ed-editable ed-pct-standalone" contenteditable="true" style="color:var(--coral)">72,35%</p>
+            <p class="stat-caption gc-caption-inline ed-editable" contenteditable="true">Promedio general de respuestas en rango acertado frente a ejercicios de observación y abstracción. Color de barra = nivel de logro por pregunta.</p>
+            <div class="gc-bars-wide gc-chart" data-form="bulletThreshold" data-label="Observación y abstracción" data-variants='{
+              "bulletThreshold": {"items":[
+                {"label":"Promedio general del ámbito","value":72.35,"display":"72,35%"},
+                {"label":"P1 · Organización espacial","value":98,"display":"98%"},
+                {"label":"P2 · Forma y concepto (colaboración)","value":92,"display":"92%"},
+                {"label":"P3 · Síntesis visual (ojo humano)","value":61.3,"display":"61,3%"},
+                {"label":"P4 · Comprensión sistémica (bicicleta)","value":38.1,"display":"38,1%"}
+              ]},
+              "rankedBars": {"items":[
+                {"label":"Promedio general del ámbito","value":72.35,"display":"72,35% · Nivel II","color":"#EDD121"},
+                {"label":"P1 · Organización espacial","value":98,"display":"98% · Nivel III","color":"#3B7359"},
+                {"label":"P2 · Forma y concepto","value":92,"display":"92% · Nivel III","color":"#3B7359"},
+                {"label":"P3 · Síntesis visual","value":61.3,"display":"61,3% · Nivel II","color":"#EDD121"},
+                {"label":"P4 · Comprensión sistémica","value":38.1,"display":"38,1% · Nivel I","color":"#D12E1C"}
+              ]}
+            }'></div>
+          </div>
+          <div class="firma">
+            <span class="firma-left">
+              <img src="assets/img/logo-faaad-negro.png" alt="FaAADudp">
+              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
+            </span>
+            <span class="doc-tag ed-editable" contenteditable="true">Perfil de ingreso · P1</span>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             14. ÁMBITO 1 — LECTURA CUALITATIVA (P3, P4, P5)
+             ============================================================ -->
+        <section class="slide bg-negro" id="slide-14" data-slide-title="Observación y abstracción — lectura">
+          <div class="slide-pad">
+            <span class="tag-eyebrow on-coral gc-tag">1 · Observación y abstracción · lectura</span>
+            <p class="stat-huge gc-stat ed-editable ed-pct-standalone" contenteditable="true" style="color:var(--coral)">38,1%</p>
+            <p class="stat-caption gc-caption ed-editable" contenteditable="true"><strong>P4 · Insuficiente.</strong> Reconocimiento por partes y más descriptivo; interpretación menos sistémica o desde la articulación de estos componentes. Posible problema de comprensión lectora también.<br><br><strong>P3 · Suficiente (61,3%).</strong> Comprensión dispar de lo que significa en la práctica abstraer y sintetizar visualmente un objeto o concepto.<br><br><strong>P5.</strong> No se puede establecer con certeza el nivel de logro. Se reformulará la pregunta.</p>
+          </div>
+          <div class="firma">
+            <span class="firma-left">
+              <img src="assets/img/logo-faaad-blanco.png" alt="FaAADudp">
+              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
+            </span>
+            <span class="doc-tag ed-editable" contenteditable="true">Perfil de ingreso · P1</span>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             15. ÁMBITO 2 — INFORMARSE / MOTIVACIONES (P1)
+             ============================================================ -->
+        <section class="slide bg-crema" id="slide-15" data-slide-title="Informarse — motivaciones">
+          <div class="slide-pad">
+            <span class="tag-eyebrow on-negro gc-tag">2 · Informarse con espíritu crítico · P1 · Nivel III — Satisfactorio</span>
+            <p class="stat-caption gc-caption-inline ed-editable" contenteditable="true" style="align-self:start;padding-top:.6cqw">«¿Por qué te interesó estudiar Diseño?» — respuesta libre. Tres perfiles de motivación, cada uno abarca <strong>aprox. ⅓ del estudiantado</strong>. Hay un proceso de reflexión personal en desarrollo, con una comprensión del quehacer disciplinar ya en avance.</p>
+            <div class="gc-bars-wide gc-chart" data-form="cards" data-label="Motivación" data-variants='{
+              "cards": {"cards":[
+                {"t":"Identitaria","d":"«Me gusta crear.» Expresión personal y desarrollo creativo."},
+                {"t":"Biográfica","d":"«Siempre me gustó dibujar, construir o hacer manualidades.» El hacer concreto."},
+                {"t":"Disciplinar","d":"«Resolver problemas, mejorar experiencias o trabajar con personas.»"}
+              ]},
+              "band": {"segments":[{"label":"Identitaria","value":33.3,"display":"≈33%","fill":"#FF6C53"},{"label":"Biográfica","value":33.3,"display":"≈33%","fill":"#1C1C1C"},{"label":"Disciplinar","value":33.4,"display":"≈33%","fill":"#99B0C9"}]}
+            }'></div>
+          </div>
+          <div class="firma">
+            <span class="firma-left">
+              <img src="assets/img/logo-faaad-negro.png" alt="FaAADudp">
+              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
+            </span>
+            <span class="doc-tag ed-editable" contenteditable="true">Perfil de ingreso · P1</span>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             16. ÁMBITO 2 — REFERENTES (P2)
+             ============================================================ -->
+        <section class="slide bg-blanco" id="slide-16" data-slide-title="Informarse — referentes">
+          <div class="slide-pad">
+            <span class="tag-eyebrow on-negro gc-tag">2 · Informarse con espíritu crítico · P2 · Nivel II — Suficiente</span>
+            <p class="stat-huge gc-stat-inline ed-editable ed-pct-standalone" contenteditable="true" style="color:var(--coral)">120</p>
+            <p class="stat-caption gc-caption-inline ed-editable" contenteditable="true">menciones a <strong>referentes específicos</strong> del ámbito creativo — sobre todo cultura visual y digital, menos exponentes históricos. Falta distinguir referentes de antecedentes; se reformulará la pregunta.</p>
+            <div class="gc-bars-wide">
+              <ul class="barras">
+                <li class="barra-fila" style="--pct:100"><span class="barra-label ed-editable" contenteditable="true">Referentes específicos del ámbito creativo o afín</span><span class="barra-track"><span class="barra-fill"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">120</span></li>
+                <li class="barra-fila" style="--pct:45"><span class="barra-label ed-editable" contenteditable="true">Respuestas inespecíficas, no individualizan referentes</span><span class="barra-track"><span class="barra-fill" style="background:var(--azul-osc)"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">54</span></li>
+                <li class="barra-fila" style="--pct:12.5"><span class="barra-label ed-editable" contenteditable="true">Personas cercanas: familiares, conocidos, profesores</span><span class="barra-track"><span class="barra-fill" style="background:var(--azul-osc)"></span></span><span class="barra-valor ed-editable ed-pct" contenteditable="true">15</span></li>
+              </ul>
+            </div>
+          </div>
+          <div class="firma">
+            <span class="firma-left">
+              <img src="assets/img/logo-faaad-negro.png" alt="FaAADudp">
+              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
+            </span>
+            <span class="doc-tag ed-editable" contenteditable="true">Perfil de ingreso · P1</span>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             17. ÁMBITO 3 — HABILIDADES MANUALES Y OFICIO (RESUMEN)
+             ============================================================ -->
+        <section class="slide bg-azul" id="slide-17" data-slide-title="Habilidades manuales y oficio">
+          <div class="slide-pad">
+            <span class="tag-eyebrow on-coral gc-tag">3 · Habilidades manuales y oficio · Nivel III — Satisfactorio</span>
+            <h2 class="gc-title-sm ed-editable" contenteditable="true">Alto conocimiento práctico</h2>
+            <div class="gc-tri">
+              <div class="tri-cifra">
+                <div class="celda">
+                  <span class="n ed-editable ed-pct-standalone" contenteditable="true">235</span>
+                  <span class="rot ed-editable" contenteditable="true">menciones — practica habitualmente disciplinas o hobbies. Solo 14 casos no tienen ninguna.</span>
+                </div>
+                <div class="celda">
+                  <span class="n ed-editable ed-pct-standalone" contenteditable="true">176</span>
+                  <span class="rot ed-editable" contenteditable="true">menciones — ha trabajado con técnicas manuales.</span>
+                </div>
+                <div class="celda">
+                  <span class="n ed-editable ed-pct-standalone" contenteditable="true">354</span>
+                  <span class="rot ed-editable" contenteditable="true">menciones — manejo y alfabetización en herramientas digitales.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="firma">
+            <span class="firma-left">
+              <img src="assets/img/logo-faaad-blanco.png" alt="FaAADudp">
+              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
+            </span>
+            <span class="doc-tag ed-editable" contenteditable="true">Perfil de ingreso · P1</span>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             18. ÁMBITO 3 — TÉCNICAS (P2)
+             ============================================================ -->
+        <section class="slide bg-crema" id="slide-18" data-slide-title="Manejo de técnicas">
+          <div class="slide-pad">
+            <span class="tag-eyebrow on-negro gc-tag">3 · Manejo de técnicas · P2 · Nivel III</span>
+            <p class="stat-huge gc-stat-inline ed-editable ed-pct-standalone" contenteditable="true" style="color:var(--coral)">176</p>
+            <p class="stat-caption gc-caption-inline ed-editable" contenteditable="true">menciones sobre el <strong>manejo práctico de técnicas</strong>. Predomina lo tradicional.</p>
+            <div class="gc-bars-wide gc-chart" data-form="swarm" data-label="Manejo de técnicas" data-variants='{
+              "swarm": {"items":[
+                {"label":"Tradicionales","n":144,"color":"#1C1C1C"},
+                {"label":"Especializadas","n":32,"color":"#FF6C53"},
+                {"label":"Ninguna","n":18,"hollow":true}
+              ],"note":"Cada punto = 1 mención (176 en total)"},
+              "rankedBars": {"items":[
+                {"label":"Tradicionales","value":144,"display":"144","color":"#1C1C1C"},
+                {"label":"Especializadas","value":32,"display":"32","color":"#FF6C53"},
+                {"label":"Ninguna","value":18,"display":"18","color":"#99B0C9"}
+              ]}
+            }'></div>
+          </div>
+          <div class="firma">
+            <span class="firma-left">
+              <img src="assets/img/logo-faaad-negro.png" alt="FaAADudp">
+              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
+            </span>
+            <span class="doc-tag ed-editable" contenteditable="true">Perfil de ingreso · P1</span>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             19. ÁMBITO 3 — HERRAMIENTAS DIGITALES (P3)
+             ============================================================ -->
+        <section class="slide bg-blanco" id="slide-19" data-slide-title="Herramientas digitales">
+          <div class="slide-pad">
+            <span class="tag-eyebrow on-negro gc-tag">3 · Herramientas digitales · P3 · Nivel III</span>
+            <p class="stat-huge gc-stat-inline ed-editable ed-pct-standalone" contenteditable="true" style="color:var(--coral)">354</p>
+            <p class="stat-caption gc-caption-inline ed-editable" contenteditable="true">menciones sobre manejo y alfabetización digital. Diseño: 142, de las cuales 32 son especializadas (núcleo coral). Productividad: 132 (85% recursos básicos).</p>
+            <div class="gc-bars-wide gc-chart" data-form="swarm" data-label="Herramientas digitales" data-variants='{
+              "swarm": {"items":[
+                {"label":"Diseño","n":142,"color":"#1C1C1C","coreN":32,"coreColor":"#FF6C53"},
+                {"label":"Productividad","n":132,"color":"#335C96"},
+                {"label":"IA","n":61,"color":"#3B7359"},
+                {"label":"Colaborativo","n":19,"color":"#99B0C9"},
+                {"label":"Ninguna","n":11,"hollow":true}
+              ],"note":"Cada punto = 1 mención (354 en total) · núcleo coral en «Diseño» = 32 herramientas especializadas"},
+              "rankedBars": {"items":[
+                {"label":"Diseño","value":142,"display":"142","color":"#1C1C1C"},
+                {"label":"Productividad","value":132,"display":"132","color":"#335C96"},
+                {"label":"IA","value":61,"display":"61","color":"#3B7359"},
+                {"label":"Colaborativo","value":19,"display":"19","color":"#99B0C9"},
+                {"label":"Ninguna","value":11,"display":"11","color":"#FF6C53"}
+              ]}
+            }'></div>
+          </div>
+          <div class="firma">
+            <span class="firma-left">
+              <img src="assets/img/logo-faaad-negro.png" alt="FaAADudp">
+              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
+            </span>
+            <span class="doc-tag ed-editable" contenteditable="true">Perfil de ingreso · P1</span>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             20. ÁMBITO 4 — HABILIDADES BLANDAS (CASOS 1 Y 2)
+             ============================================================ -->
+        <section class="slide bg-negro" id="slide-20" data-slide-title="Habilidades blandas — casos 1 y 2">
+          <div class="slide-pad">
+            <span class="tag-eyebrow on-coral gc-tag">4 · Habilidades blandas · Nivel II — Suficiente</span>
+            <p class="stat-caption ed-editable" contenteditable="true" style="grid-column:1/9;grid-row:2/4;align-self:end;max-width:none"><strong>Caso 1 · Trabajo colaborativo.</strong> Predomina el perfil que combina coordinación, organización y colaboración frente a la incertidumbre. — <strong>Caso 2 · Retroalimentación.</strong> Predomina la selección crítica por sobre actuar solo según lo que el/la docente espera.</p>
+            <div class="gc-chart" data-form="band" data-label="Caso 1 · Colaborativo" style="grid-column:1/5;grid-row:4/7" data-variants='{
+              "band": {"segments":[{"label":"Caso 1 · Coordina y organiza (A)","value":66,"display":"66%","fill":"#FF6C53"},{"label":"Otros perfiles (B, C)","value":34,"display":"≈34%","fill":"#FFFFFF"}]},
+              "rankedBars": {"items":[{"label":"Coordina y organiza (A)","value":66,"display":"66%","color":"#FF6C53"},{"label":"Otros perfiles (B, C)","value":34,"display":"≈34%","color":"#FFFFFF"}]}
+            }'></div>
+            <div class="gc-chart" data-form="band" data-label="Caso 2 · Retroalimentación" style="grid-column:5/9;grid-row:4/7" data-variants='{
+              "band": {"segments":[{"label":"Caso 2 · Selección crítica (A+B)","value":77,"display":"77%","fill":"#FF6C53"},{"label":"Según expectativa docente (D)","value":17,"display":"17%","fill":"#FFFFFF"},{"label":"Requiere aclaración (C)","value":6,"display":"6%","fill":"#99B0C9"}]},
+              "rankedBars": {"items":[{"label":"Selección crítica (A+B)","value":77,"display":"77%","color":"#FF6C53"},{"label":"Según expectativa docente (D)","value":17,"display":"17%","color":"#FFFFFF"},{"label":"Requiere aclaración (C)","value":6,"display":"6%","color":"#99B0C9"}]}
+            }'></div>
+          </div>
+          <div class="firma">
+            <span class="firma-left">
+              <img src="assets/img/logo-faaad-blanco.png" alt="FaAADudp">
+              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
+            </span>
+            <span class="doc-tag ed-editable" contenteditable="true">Perfil de ingreso · P1</span>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             21. ÁMBITO 4 — HABILIDADES BLANDAS (CASO 3)
+             ============================================================ -->
+        <section class="slide bg-crema" id="slide-21" data-slide-title="Habilidades blandas — caso 3">
+          <div class="slide-pad">
+            <span class="tag-eyebrow on-negro gc-tag">4 · Habilidades blandas · Caso 3 · Nivel I — Insuficiente</span>
+            <p class="stat-huge gc-stat-inline ed-editable ed-pct-standalone" contenteditable="true" style="color:var(--coral)">45,2%</p>
+            <p class="stat-caption gc-caption-inline ed-editable" contenteditable="true"><strong>Organización y hábitos de estudio.</strong> La planificación por prioridades es la estrategia predominante (A), pero un porcentaje importante se organiza según la urgencia de las entregas (D).</p>
+            <div class="gc-bars-wide gc-chart" data-form="band" data-label="Caso 3 · Organización" data-variants='{
+              "band": {"segments":[{"label":"Planifica con prioridades (A)","value":45.2,"display":"45,2%","fill":"#FF6C53"},{"label":"Organiza según urgencia (D)","value":35.5,"display":"35,5%","fill":"#1C1C1C"},{"label":"Otros perfiles (B, C)","value":19.3,"display":"≈19,3%","fill":"#99B0C9"}]},
+              "rankedBars": {"items":[{"label":"Planifica con prioridades (A)","value":45.2,"display":"45,2%","color":"#FF6C53"},{"label":"Organiza según urgencia (D)","value":35.5,"display":"35,5%","color":"#1C1C1C"},{"label":"Otros perfiles (B, C)","value":19.3,"display":"≈19,3%","color":"#99B0C9"}]}
+            }'></div>
+          </div>
+          <div class="firma">
+            <span class="firma-left">
+              <img src="assets/img/logo-faaad-negro.png" alt="FaAADudp">
+              <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
+            </span>
+            <span class="doc-tag ed-editable" contenteditable="true">Perfil de ingreso · P1</span>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             22. CIERRE — NIVEL DE LOGRO POR ÁMBITO
+             ============================================================ -->
+        <section class="slide bg-coral" id="slide-22" data-slide-title="Nivel de logro por ámbito">
+          <div class="slide-pad">
+            <span class="tag-eyebrow on-negro gc-tag">Síntesis · Pregunta 1</span>
+            <h2 class="gc-title-sm ed-editable" contenteditable="true">Nivel de logro por ámbito</h2>
+            <div class="gc-cards">
+              <div class="asignaturas-grid">
+                <div class="asignatura-card">
+                  <span class="foco ed-editable" contenteditable="true">Observación y abstracción</span>
+                  <p class="lista ed-editable" contenteditable="true">Nivel II — Suficiente · promedio 72,35%</p>
+                </div>
+                <div class="asignatura-card">
+                  <span class="foco ed-editable" contenteditable="true">Informarse con espíritu crítico</span>
+                  <p class="lista ed-editable" contenteditable="true">Sin nivel ponderable · P1 Nivel III, P2 Nivel II</p>
+                </div>
+                <div class="asignatura-card">
+                  <span class="foco ed-editable" contenteditable="true">Habilidades manuales y oficio</span>
+                  <p class="lista ed-editable" contenteditable="true">Nivel III — Satisfactorio</p>
+                </div>
+                <div class="asignatura-card">
+                  <span class="foco ed-editable" contenteditable="true">Habilidades blandas</span>
+                  <p class="lista ed-editable" contenteditable="true">Nivel II — Suficiente · Caso 3 en Nivel I</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="firma">
+            <span class="firma-left">
+              <img src="assets/img/logo-faaad-negro.png" alt="FaAADudp">
               <span class="escuela-tag ed-editable" contenteditable="true">Escuela de Diseño</span>
             </span>
             <span class="doc-tag ed-editable" contenteditable="true">Cohorte 2026</span>
@@ -575,6 +822,6 @@
 
 <div id="ed-toasts"></div>
 
-<script src="js/app.js"></script>
+<script src="js/informe/app.js"></script>
 </body>
 </html>

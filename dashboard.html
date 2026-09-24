@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Explorador de datos · Perfil de ingreso · Escuela de Diseño UDP</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/dashboard.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js" defer></script>
+<script src="js/core/charts.js" defer></script>
+<script src="js/explorador/charts-d3.js" defer></script>
+<script src="js/core/config.js" defer></script>
+<script src="js/core/sheet-bind.js" defer></script>
+<script src="js/explorador/dashboard.js" defer></script>
+</head>
+<body class="dash">
+
+<div class="app">
+  <aside class="side">
+    <div class="side-brand">
+      <img src="assets/img/logo-faaad-blanco.png" alt="FaAADudp">
+      <span>Explorador de datos</span>
+    </div>
+
+    <label class="side-search">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="dash-search" type="search" placeholder="Buscar pregunta…" aria-label="Buscar pregunta">
+    </label>
+
+    <nav id="dash-tree" class="tree" aria-label="Años y preguntas"></nav>
+
+    <div class="side-foot">
+      <div class="status"><span id="dash-status-dot" class="dot"></span><span id="dash-status-text">Leyendo Sheet…</span></div>
+      <div class="side-actions">
+        <button id="dash-refresh" type="button" title="Volver a leer el Sheet">Actualizar</button>
+        <a class="dash-link" href="index.html">Informe 2026 →</a>
+      </div>
+    </div>
+  </aside>
+
+  <main class="panel">
+    <div id="dash-empty" class="dash-msg" hidden></div>
+
+    <div id="dash-content" hidden>
+      <header class="panel-top">
+        <div class="titles">
+          <p id="dash-crumb" class="crumb"></p>
+          <h1 id="dash-title"></h1>
+        </div>
+        <div id="dash-bgs" class="bgpick" role="group" aria-label="Fondo de la lámina"></div>
+      </header>
+
+      <div class="work">
+        <div class="work-main">
+          <div class="stage-card">
+            <div id="dash-stage-wrap"></div>
+            <div class="stage-meta">
+              <span id="dash-formname" class="formname"></span>
+              <p id="dash-also" class="dash-also"></p>
+            </div>
+          </div>
+
+          <details class="dash-table" open>
+            <summary>Datos de la pregunta</summary>
+            <div class="tbl-scroll"><table id="dash-table"></table></div>
+            <p class="tbl-foot"><a id="dash-sheet-link" target="_blank" rel="noopener">Abrir esta pestaña en el Google Sheet</a> · para cambiar un número, edítalo ahí y pulsa «Actualizar».</p>
+          </details>
+        </div>
+
+        <aside class="rail" aria-label="Tipo de gráfico">
+          <div class="rail-head">
+            <span class="rail-title">Tipo de gráfico</span>
+          </div>
+          <div id="dash-forms" class="thumbs" role="listbox"></div>
+        </aside>
+      </div>
+    </div>
+  </main>
+</div>
+
+</body>
+</html>

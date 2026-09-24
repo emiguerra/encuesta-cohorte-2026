@@ -103,18 +103,19 @@ html.editor-active, html.editor-active body {
 .ed-swatch:hover { border-color:var(--ed-text-2); }
 .ed-swatch.is-active { border-color:var(--ed-text); box-shadow:0 0 0 1px var(--ed-text); }
 
-/* Toggle switch */
-.ed-toggle-row { display:flex; align-items:center; justify-content:space-between; }
-.ed-toggle { position:relative; display:inline-flex; align-items:center; cursor:pointer; flex-shrink:0; }
-.ed-toggle input { position:absolute; opacity:0; width:0; height:0; }
-.ed-track { display:block; width:30px; height:16px; background:var(--ed-raised); border:1px solid var(--ed-border); position:relative; transition:background .15s,border-color .15s; }
-.ed-track::after { content:''; position:absolute; top:2px; left:2px; width:10px; height:10px; background:var(--ed-text-3); transition:transform .15s,background .15s; }
-.ed-toggle input:checked + .ed-track { background:var(--ed-accent); border-color:var(--ed-accent); }
-.ed-toggle input:checked + .ed-track::after { transform:translateX(14px); background:#1c1c1c; }
-
 .ed-action { width:100%; height:28px; background:var(--ed-raised); border:1px solid var(--ed-border); color:var(--ed-text-2); font-family:var(--ed-font); font-size:10px; text-transform:uppercase; letter-spacing:.03em; cursor:pointer; transition:background .1s,color .1s,border-color .1s; }
 .ed-action:hover { background:#2f2f2f; border-color:var(--ed-border-hi); color:var(--ed-text); }
-.ed-action.danger:hover { color:#ff8a75; border-color:#ff8a75; }
+
+/* ─── Selector de tipo de gráfico (chips, no botones de ancho completo) ── */
+.ed-chip-row { display:flex; flex-wrap:wrap; gap:5px; }
+.ed-chip {
+  width:auto; height:auto; padding:5px 9px; border-radius:20px;
+  background:var(--ed-raised); border:1px solid var(--ed-border); color:var(--ed-text-2);
+  font-family:var(--ed-font); font-size:9px; text-transform:uppercase; letter-spacing:.03em;
+  cursor:pointer; transition:background .1s,color .1s,border-color .1s;
+}
+.ed-chip:hover { border-color:var(--ed-border-hi); color:var(--ed-text); }
+.ed-chip.is-active { background:var(--ed-accent); border-color:var(--ed-accent); color:#1c1c1c; font-weight:700; }
 
 .ed-file-input { display:none; }
 
@@ -135,7 +136,7 @@ html.editor-active, html.editor-active body {
 .ed-editing .barra-valor { cursor:text; }
 .ed-editing .barra-valor:hover, .ed-editing .barra-valor:focus { outline:1.5px dashed var(--coral); outline-offset:2px; background:rgba(255,108,83,.1); }
 .ed-editing .barra-fila { position:relative; }
-.ed-editing .pregunta-bloque, .ed-editing .barra-fila { transition: background .15s; }
+.ed-editing .barra-fila { transition: background .15s; }
 
 .ed-editing .barra-fila { padding-right: 4cqw; position: relative; }
 .ed-row-tools {

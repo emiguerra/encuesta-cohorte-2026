@@ -125,15 +125,18 @@
   let slideObserver = null;
   function observeSlides() {
     if (slideObserver) slideObserver.disconnect();
+    // Un callback de IntersectionObserver solo trae los elementos que
+    // cruzaron un umbral EN ESE instante, no todos los que están visibles
+    // ahora — si no se guarda el ratio de cada slide aparte, el slide más
+    // visible "de verdad" puede quedar afuera de `entries` y el activo
+    // termina un slide adelantado o atrasado respecto al scroll real.
+    const ratios = new Map();
     const io = new IntersectionObserver(
       (entries) => {
-        let best = null;
-        entries.forEach((e) => {
-          if (e.isIntersecting) {
-            if (!best || e.intersectionRatio > best.intersectionRatio) best = e;
-          }
-        });
-        if (best) setActiveSlide(best.target.id);
+        entries.forEach((e) => ratios.set(e.target.id, e.isIntersecting ? e.intersectionRatio : 0));
+        let bestId = null, bestRatio = -1;
+        ratios.forEach((r, id) => { if (r > bestRatio) { bestRatio = r; bestId = id; } });
+        if (bestId) setActiveSlide(bestId);
       },
       { root: previewArea, threshold: [0.25, 0.5, 0.75] }
     );
