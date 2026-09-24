@@ -7,3 +7,5 @@ dev/
 
 # Local Netlify folder
 .netlify
+firebase-debug.log
+*.log
