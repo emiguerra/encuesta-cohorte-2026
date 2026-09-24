@@ -55,7 +55,9 @@ http://localhost:8000/dashboard.html
 
 ## De dónde vienen los datos
 
-Todo sale de un Google Sheet con una pestaña por año (`2023`, `2024`, `2025`, `2026`…). El id de ese Sheet está en un solo archivo:
+Todo sale de este Google Sheet: **[Base de datos · Encuesta de perfil de ingreso](https://docs.google.com/spreadsheets/d/1TBtgTRdu8anBzwF8DglIZqiSEshpI-J8mpeOx4p0XvM/edit?usp=sharing)**. Tiene una pestaña por año (`2023`, `2024`, `2025`, `2026`…) y una pestaña `README.MD` que explica su formato con ejemplos, para alguien sin conocimientos técnicos.
+
+El id de ese Sheet está en un solo archivo del código:
 
 ```js
 // js/core/config.js
@@ -73,8 +75,6 @@ Cada fila del Sheet es un dato: una categoría de una pregunta, con su valor. La
 ```txt
 familia | pregunta | categoria | valor | unidad | n_absoluto | n_total_respuestas | rango_logro | nota
 ```
-
-La pestaña `README.MD` dentro del propio Sheet explica esto con ejemplos, pensada para alguien sin conocimientos técnicos.
 
 ## Agregar un año nuevo
 

@@ -4,3 +4,6 @@ logos/
 punteo_narrativo_informe_encuesta.txt
 .claude/
 dev/
+
+# Local Netlify folder
+.netlify
