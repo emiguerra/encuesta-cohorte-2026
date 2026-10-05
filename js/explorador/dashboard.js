@@ -323,12 +323,19 @@
     $("#dash-formname").textContent = FORM_LABEL()[state.form] || state.form;
 
     const qKey = baseOf(q);
+    const jump = y => { state.year = y; state.q = state.data[y].find(x => baseOf(x) === qKey).pregunta; state.open.add(y); renderMain(); };
     const others = state.years.filter(y => y !== state.year && (state.data[y] || []).some(x => baseOf(x) === qKey));
-    $("#dash-also").replaceChildren(...(others.length
-      ? ["También en", ...others.map(y => h("button", { type: "button", onclick: () => {
-          state.year = y; state.q = state.data[y].find(x => baseOf(x) === qKey).pregunta; state.open.add(y); renderMain();
-        } }, y))]
-      : ["Solo en " + state.year]));
+    let also;
+    if (P.cmp) {
+      // años que de verdad entraron a la comparación (comparten categorías, no solo el texto de la pregunta)
+      also = ["Comparando", ...P.cmp.years.map(y => y === state.year ? h("strong", null, y) : h("button", { type: "button", onclick: () => jump(y) }, y))];
+    } else if (others.length) {
+      // la pregunta existe en otros años, pero sus categorías no coinciden: no hay gráfico en conjunto, solo referencia
+      also = ["Misma pregunta, sin datos para comparar en", ...others.map(y => h("button", { type: "button", onclick: () => jump(y) }, y))];
+    } else {
+      also = ["Solo en " + state.year];
+    }
+    $("#dash-also").replaceChildren(...also);
 
     renderTable(q); renderTree(); saveHash();
   }
