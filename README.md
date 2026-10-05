@@ -108,7 +108,8 @@ Después de registrarla, el explorador la ofrece solo si el perfil de la pregunt
 
 ### Dos años con la misma pregunta no se pueden comparar
 
-* El explorador empareja categorías por texto exacto. Si una categoría cambia de nombre entre años (por ejemplo "Moda" y "Mención Moda"), se tratan como categorías distintas.
+* Por defecto, el explorador empareja preguntas y categorías por texto exacto. Si una pregunta o categoría cambia de nombre entre años (por ejemplo "Moda" y "Mención Moda"), se tratan como cosas distintas.
+* Para esos casos existe una columna opcional en el Sheet, `pregunta_base` (la última de cada pestaña): escribe el mismo texto ahí, en las filas de ambas preguntas, y el explorador las trata como una sola aunque su `pregunta` sea distinta. Solo sirve si las dos preguntas comparten las mismas categorías de respuesta — si no, no hay nada que graficar en conjunto (ver bloque 4D del README del propio Sheet).
 
 ### Una pregunta se ve como tarjetas sueltas en vez de un gráfico
 
