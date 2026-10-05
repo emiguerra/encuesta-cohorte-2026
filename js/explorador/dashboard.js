@@ -28,6 +28,7 @@
   const RARE1 = ["spiral", "rose", "nested"];
   const RARE_CMP = ["dumbbell", "bump", "rings", "stream", "radar"];
   const RARE = [...RARE1, ...RARE_CMP];
+  const MULTI = "multiples"; // "años lado a lado": una mini-lámina por año, no un gráfico fusionado
   const isCmp = f => CMP.includes(f) || RARE_CMP.includes(f);
   const TALL = new Set([...ONE_D3, ...CMP, ...RARE]);
 
@@ -122,28 +123,40 @@
     const swarm = P.hasN && P.sumN > 0 && P.sumN <= 420 && n <= 8;
     const pict = swarm && n <= 6 && P.isPct && P.kind === "single" && (P.N == null || Math.abs(P.N - P.sumN) <= Math.max(2, P.N * 0.03));
     const cmp = P.cmp ? CMP.slice() : [];
-    if (P.kind === "empty" || P.kind === "mixed") return ["cards"];
-    if (P.kind === "value") return ["stat", ...cmp, ...(P.cmp ? ["dumbbell"] : [])];
-    if (P.kind === "single") { if (n <= 6) f.push("band", "ring"); f.push("rankedBars"); if (n >= 3 && n <= 12) f.push("burst"); if (swarm) f.push("swarm"); if (pict) f.push("pictogram"); }
-    else if (P.kind === "partial") { if (n <= 6) f.push("band"); f.push("rankedBars"); if (n >= 3 && n <= 12) f.push("burst"); if (swarm) f.push("swarm"); }
-    else if (P.kind === "multi") { if (n >= 3 && n <= 12) f.push("burst"); f.push("rankedBars"); if (swarm) f.push("swarm"); }
-    else { f.push("rankedBars"); if (n >= 3 && n <= 12) f.push("burst"); if (swarm) f.push("swarm"); }
-    if (n >= 2) f.push("radial", "lollipop");
-    if (n >= 3) f.push("bubbles", "treemap", "network");
-    if ((P.kind === "single" || P.kind === "partial") && n >= 2 && n <= 8) f.push("donut");
-    const rare = [];
-    if (n >= 4) rare.push("spiral");
-    if (n >= 3) rare.push("rose");
-    if (n >= 3 && n <= 8) rare.push("nested");
-    if (P.cmp) {
-      const c = P.cmp, shares = P.isPct && c.sums.every(x => x >= 85 && x <= 105);
-      rare.push("dumbbell");
-      if (c.series.length >= 3) rare.push("bump");
-      if (c.series.length >= 4) rare.push("radar");
-      if (shares && c.series.length >= 2) rare.push("rings");
-      if (shares && c.years.length >= 3 && c.series.length >= 2) rare.push("stream");
+    let out;
+    if (P.kind === "empty" || P.kind === "mixed") out = ["cards"];
+    else if (P.kind === "value") out = ["stat", ...cmp, ...(P.cmp ? ["dumbbell"] : [])];
+    else {
+      if (P.kind === "single") { if (n <= 6) f.push("band", "ring"); f.push("rankedBars"); if (n >= 3 && n <= 12) f.push("burst"); if (swarm) f.push("swarm"); if (pict) f.push("pictogram"); }
+      else if (P.kind === "partial") { if (n <= 6) f.push("band"); f.push("rankedBars"); if (n >= 3 && n <= 12) f.push("burst"); if (swarm) f.push("swarm"); }
+      else if (P.kind === "multi") { if (n >= 3 && n <= 12) f.push("burst"); f.push("rankedBars"); if (swarm) f.push("swarm"); }
+      else { f.push("rankedBars"); if (n >= 3 && n <= 12) f.push("burst"); if (swarm) f.push("swarm"); }
+      if (n >= 2) f.push("radial", "lollipop");
+      if (n >= 3) f.push("bubbles", "treemap", "network");
+      if ((P.kind === "single" || P.kind === "partial") && n >= 2 && n <= 8) f.push("donut");
+      const rare = [];
+      if (n >= 4) rare.push("spiral");
+      if (n >= 3) rare.push("rose");
+      if (n >= 3 && n <= 8) rare.push("nested");
+      if (P.cmp) {
+        const c = P.cmp, shares = P.isPct && c.sums.every(x => x >= 85 && x <= 105);
+        rare.push("dumbbell");
+        if (c.series.length >= 3) rare.push("bump");
+        if (c.series.length >= 4) rare.push("radar");
+        if (shares && c.series.length >= 2) rare.push("rings");
+        if (shares && c.years.length >= 3 && c.series.length >= 2) rare.push("stream");
+      }
+      out = f.concat(cmp, rare);
     }
-    return f.concat(cmp, rare);
+    // "años lado a lado": no necesita categorías compatibles, solo que la pregunta exista en 2+ años
+    if (P.relatedYears && P.relatedYears.length >= 2) out = out.concat([MULTI]);
+    return out;
+  }
+
+  /* Todos los años donde existe esta pregunta (por su "base"), exista o no una comparación numérica real */
+  function relatedYears(q) {
+    const key = baseOf(q);
+    return state.years.filter(y => (state.data[y] || []).some(x => baseOf(x) === key));
   }
 
   /* Misma pregunta en varios años: una serie por categoría (color según su lugar de aparición, no su ranking) */
@@ -167,7 +180,7 @@
     series.sort((a, b) => peak(b) - peak(a));
     return { years: yrs.filter((_, i) => keep[i]), series: series.slice(0, 12), sums: sums.filter((_, i) => keep[i]) };
   }
-  const FORM_LABEL = () => Object.assign({}, window.GCCharts.FORM_LABEL, { stat: "Cifra" });
+  const FORM_LABEL = () => Object.assign({}, window.GCCharts.FORM_LABEL, { stat: "Cifra", [MULTI]: "Años lado a lado" });
 
   /* ------------------ Datos para cada forma (desde las filas) ------------------ */
   function build(form, P, theme) {
@@ -248,12 +261,13 @@
     host.replaceChildren(h("div", { style: "height:100%;display:flex;align-items:flex-end;font-size:1.5cqw;line-height:1.4;max-width:60ch;opacity:.85;" }, i.nota || ""));
   }
 
-  function drawStage(P, form) {
-    const theme = BG[state.bg];
+  /* Arma una lámina (sin montarla en la página) para una pregunta/forma/año dados. yearLabel permite mostrar
+     el año real de ESE panel cuando se dibujan varias láminas a la vez (modo "años lado a lado"). */
+  function buildSlide(P, form, theme, yearLabel) {
     const N = P.kind === "mixed" ? "" : P.N != null ? `${P.N} respuestas` : (P.hasN && P.sumN ? `${fnum(P.sumN)} en total` : "");
     const hd = headline(P);
     const tall = TALL.has(form), cmp = isCmp(form);
-    const eyebrow = h("span", { class: `tag-eyebrow ${theme.dark ? "on-coral" : "on-negro"} gc-tag` }, [short(P.q.pregunta), cmp ? `${P.cmp.years[0]}–${P.cmp.years[P.cmp.years.length - 1]}` : state.year, cmp ? "" : N].filter(Boolean).join(" · "));
+    const eyebrow = h("span", { class: `tag-eyebrow ${theme.dark ? "on-coral" : "on-negro"} gc-tag` }, [short(P.q.pregunta), cmp ? `${P.cmp.years[0]}–${P.cmp.years[P.cmp.years.length - 1]}` : (yearLabel || state.year), cmp ? "" : N].filter(Boolean).join(" · "));
     const len = hd.big.length;
     const cols = len <= 3 ? [3, 3] : len <= 5 ? [4, 4] : [5, 5];
     const bigStyle = tall ? `color:var(--coral);grid-column:1/3;grid-row:2/5;align-self:end;font-size:${Math.min(9, 19 / (0.62 * Math.max(len, 1))).toFixed(2)}cqw;`
@@ -265,11 +279,33 @@
     const slide = h("section", { class: `slide ${theme.cls}`, "aria-label": `${short(P.q.pregunta)} — ${FORM_LABEL()[form]}` },
       h("div", { class: "slide-pad" }, eyebrow, big, cap, chart),
       h("div", { class: "firma" },
-        h("span", { class: "firma-left" }, h("img", { src: `assets/logo-faaad-${theme.dark ? "blanco" : "negro"}.png`, alt: "FaAADudp" }), h("span", { class: "escuela-tag" }, "Escuela de Diseño")),
+        h("span", { class: "firma-left" }, h("img", { src: `assets/img/logo-faaad-${theme.dark ? "blanco" : "negro"}.png`, alt: "FaAADudp" }), h("span", { class: "escuela-tag" }, "Escuela de Diseño")),
         h("span", { class: "doc-tag" }, P.q.familia)));
-    $("#dash-stage-wrap").replaceChildren(slide);
     if (form === "stat") renderStat(chart, P);
     else window.GCCharts.render(chart, form, build(form, P, theme));
+    return slide;
+  }
+
+  /* "Años lado a lado": una mini-lámina POR AÑO (cada una con sus propios datos y su propia forma),
+     en vez de fusionar todo en un solo gráfico — así se compara mirando, no leyendo una leyenda. */
+  function buildMultiples(P, theme) {
+    const key = baseOf(P.q);
+    const years = state.years.filter(y => (state.data[y] || []).some(x => baseOf(x) === key));
+    const grid = h("div", { class: "multiples-grid", style: `--n:${years.length}` });
+    years.forEach(y => {
+      const yq = state.data[y].find(x => baseOf(x) === key);
+      const yP = profile(yq);
+      const yForm = formsFor(yP)[0];
+      grid.appendChild(h("div", { class: "multiples-cell" },
+        h("span", { class: "multiples-year" }, y),
+        buildSlide(yP, yForm, theme, y)));
+    });
+    return grid;
+  }
+
+  function drawStage(P, form) {
+    const theme = BG[state.bg];
+    $("#dash-stage-wrap").replaceChildren(form === MULTI ? buildMultiples(P, theme) : buildSlide(P, form, theme));
   }
 
   /* ------------------------------ Render principal ------------------------------ */
@@ -277,15 +313,22 @@
 
   // la interfaz es neutra: el color queda solo para los gráficos; los grupos se separan con un rótulo
   const GROUPS = ["Básicos", "Más formas", "Comparar años", "Poco comunes"];
-  const groupOf = f => RARE.includes(f) ? 3 : CMP.includes(f) ? 2 : ONE_D3.includes(f) ? 1 : 0;
+  const groupOf = f => f === MULTI ? 2 : RARE.includes(f) ? 3 : CMP.includes(f) ? 2 : ONE_D3.includes(f) ? 1 : 0;
   const SVGNS = "http://www.w3.org/2000/svg";
   const THUMB_VB = { band: "110 40 780 150", ring: "25 15 430 235", burst: "385 25 230 215", pictogram: "0 10 1000 210", swarm: "0 20 1000 240" };
 
-  const ICON_FORMS = new Set(["rankedBars", "cards", "swarm"]);
+  const ICON_FORMS = new Set(["rankedBars", "cards", "swarm", MULTI]);
   function iconSvg(kind, P, theme) {
     const svg = document.createElementNS(SVGNS, "svg"); svg.setAttribute("viewBox", "0 0 100 62"); svg.style.cssText = "width:100%;height:100%";
     const add = (tag, a) => { const e = document.createElementNS(SVGNS, tag); for (const k in a) e.setAttribute(k, a[k]); svg.append(e); };
-    if (kind === "rankedBars") {
+    if (kind === MULTI) {
+      // tres paneles pequeños lado a lado, cada uno con su propia mini-barra: representa "un año por panel"
+      [0, 35, 70].forEach((x, k) => {
+        add("rect", { x, y: 4, width: 28, height: 54, rx: 3, fill: "none", stroke: "#1C1C1C", "stroke-width": 1.4, "stroke-opacity": .5 });
+        add("rect", { x: x + 5, y: 12, width: 18, height: 3, rx: 1.5, fill: "#1C1C1C", "fill-opacity": .35 });
+        add("rect", { x: x + 5, y: 38 - k * 7, width: 10, height: 10 + k * 7, rx: 2, fill: k === 1 ? "#FF6C53" : "#1C1C1C" });
+      });
+    } else if (kind === "rankedBars") {
       const items = build("rankedBars", P, theme).items.slice(0, 7), mx = Math.max(...items.map(i => i.value)) || 1, hh = 62 / (items.length * 1.6);
       items.forEach((it, k) => { const y = k * hh * 1.6; add("rect", { x: 0, y, width: 100, height: hh, rx: hh / 2, fill: "#1C1C1C", "fill-opacity": .1 }); add("rect", { x: 0, y, width: Math.max(4, it.value / mx * 100), height: hh, rx: hh / 2, fill: it.color }); });
     } else if (kind === "swarm") {
@@ -308,7 +351,7 @@
     const q = currentQuestion();
     if (!q) { showMsg("Elige una pregunta en la barra de la izquierda."); return; }
     $("#dash-empty").hidden = true; $("#dash-content").hidden = false;
-    P = profile(q); P.cmp = yearSeries(P);
+    P = profile(q); P.cmp = yearSeries(P); P.relatedYears = relatedYears(q);
     const forms = formsFor(P);
     if (!forms.includes(state.form)) state.form = forms[0];
 
@@ -324,7 +367,7 @@
 
     const qKey = baseOf(q);
     const jump = y => { state.year = y; state.q = state.data[y].find(x => baseOf(x) === qKey).pregunta; state.open.add(y); renderMain(); };
-    const others = state.years.filter(y => y !== state.year && (state.data[y] || []).some(x => baseOf(x) === qKey));
+    const others = P.relatedYears.filter(y => y !== state.year);
     let also;
     if (P.cmp) {
       // años que de verdad entraron a la comparación (comparten categorías, no solo el texto de la pregunta)

@@ -76,6 +76,13 @@ body.dash { background: var(--frame-bg); color: var(--negro); margin: 0; min-hei
 #dash-stage-wrap { border-radius: 14px; overflow: hidden; box-shadow: 0 8px 24px rgba(28,28,28,.12); }
 #dash-stage-wrap .slide { margin: 0; }
 .gc-tall { grid-column: 3 / 9; grid-row: 2 / 7; align-self: stretch; min-height: 0; }
+
+/* "Años lado a lado": una mini-lámina por año, cada una con su propia tarjeta (no un único gráfico fusionado) */
+.multiples-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+.multiples-cell { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.multiples-year { font-family: var(--f-mono); font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--texto-sec); padding-left: 2px; }
+.multiples-cell .slide { margin: 0; border-radius: 14px; overflow: hidden; box-shadow: 0 8px 24px rgba(28,28,28,.12); }
+#dash-stage-wrap:has(.multiples-grid) { background: none; box-shadow: none; border-radius: 0; overflow: visible; }
 .stage-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 6px 0; }
 .formname { display: inline-flex; align-items: center; gap: 8px; font-family: var(--f-mono); font-size: 11px; letter-spacing: .07em; text-transform: uppercase; }
 .dash-also { display: flex; align-items: center; gap: 6px; margin: 0; font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--texto-sec); }
