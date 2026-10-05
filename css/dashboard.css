@@ -77,12 +77,20 @@ body.dash { background: var(--frame-bg); color: var(--negro); margin: 0; min-hei
 #dash-stage-wrap .slide { margin: 0; }
 .gc-tall { grid-column: 3 / 9; grid-row: 2 / 7; align-self: stretch; min-height: 0; }
 
-/* "Años lado a lado": una mini-lámina por año, cada una con su propia tarjeta (no un único gráfico fusionado) */
-.multiples-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
-.multiples-cell { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.multiples-year { font-family: var(--f-mono); font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--texto-sec); padding-left: 2px; }
-.multiples-cell .slide { margin: 0; border-radius: 14px; overflow: hidden; box-shadow: 0 8px 24px rgba(28,28,28,.12); }
-#dash-stage-wrap:has(.multiples-grid) { background: none; box-shadow: none; border-radius: 0; overflow: visible; }
+/* "Años lado a lado": UNA lámina con un título y un pie compartidos, y un panel por año adentro.
+   Usa el mismo lienzo cqw del resto de las láminas (ver .slide en css/style.css), así que todo
+   escala junto al reducir o agrandar la tarjeta. */
+.multi-slide .multi-pad { position: relative; z-index: 2; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 1.6cqw; padding: 4.4cqw 5cqw 2.6cqw; }
+.multi-head { display: flex; flex-direction: column; gap: .7cqw; flex: none; }
+.multi-title { font-family: var(--f-faaad); font-weight: 400; line-height: .98; margin: 0; font-size: 4.4cqw; }
+.multi-trend { font-family: var(--f-sans); font-size: 1.3cqw; line-height: 1.35; margin: 0; opacity: .85; max-width: 80ch; }
+.multi-trend strong { font-weight: 700; }
+.multi-cols { flex: 1; min-height: 0; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 2cqw; }
+.multi-col { display: flex; flex-direction: column; min-width: 0; }
+.multi-year { font-family: var(--f-mono); font-size: 1.05cqw; letter-spacing: .06em; text-transform: uppercase; opacity: .65; margin-bottom: .3cqw; }
+.multi-chart { flex: 1; min-height: 0; }
+.multi-figure { margin: .6cqw 0 0; font-family: var(--f-sans); font-weight: 700; font-size: 2cqw; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.multi-figure small { display: block; font-weight: 500; font-size: .58em; line-height: 1.3; opacity: .7; margin-top: .35cqw; }
 .stage-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 6px 0; }
 .formname { display: inline-flex; align-items: center; gap: 8px; font-family: var(--f-mono); font-size: 11px; letter-spacing: .07em; text-transform: uppercase; }
 .dash-also { display: flex; align-items: center; gap: 6px; margin: 0; font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--texto-sec); }

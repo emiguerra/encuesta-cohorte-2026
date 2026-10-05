@@ -182,15 +182,18 @@
   }
   const FORM_LABEL = () => Object.assign({}, window.GCCharts.FORM_LABEL, { stat: "Cifra", [MULTI]: "Años lado a lado" });
 
-  /* ------------------ Datos para cada forma (desde las filas) ------------------ */
-  function build(form, P, theme) {
+  /* ------------------ Datos para cada forma (desde las filas) ------------------
+     colorMap es opcional: cuando se pasa (vista "años lado a lado"), el color sigue a la
+     CATEGORÍA, no a su posición o ranking — para que signifique lo mismo en todos los paneles. */
+  function build(form, P, theme, colorMap) {
     const it = P.numeric, order = theme.order, ink = theme.ink;
+    const colorFor = (i, idx) => (colorMap && colorMap[i.label]) || order[idx % order.length];
     const disp = (i, withN) => P.isPct ? (withN && i.n != null ? `${fnum(i.n)} · ${fnum(i.v)}%` : `${fnum(i.v)}%`) : fnum(val(P, i));
     const desc = [...it].sort((a, b) => val(P, b) - val(P, a));
     const clip = (s, k) => s.length > k ? s.slice(0, k - 1) + "…" : s;
     switch (form) {
       case "band": {
-        const segs = it.map((i, k) => ({ label: i.label, value: i.v, display: disp(i, false), fill: order[k % order.length] }));
+        const segs = it.map((i, k) => ({ label: i.label, value: i.v, display: disp(i, false), fill: colorFor(i, k) }));
         if (P.sumV < 99.5) segs.push({ label: "Sin cifra en la fuente", value: r2(100 - P.sumV), display: "≈" + fnum(100 - P.sumV) + "%", hollow: true });
         return { segments: segs };
       }
@@ -205,11 +208,11 @@
         return { accent: CORAL, center: P.N != null ? String(P.N) : "", items: list.map(i => ({ label: i.label, value: P.isPct ? i.v : val(P, i) / mx * 100, display: disp(i, true) })) };
       }
       case "swarm":
-        return { items: it.map((i, k) => ({ label: i.label, n: i.n, display: disp(i, false), color: order[k % order.length] })),
+        return { items: it.map((i, k) => ({ label: i.label, n: i.n, display: disp(i, false), color: colorFor(i, k) })),
                  note: `1 punto = 1 ${P.isPct ? "respuesta" : (P.unit || "unidad").replace(/s$/, "")}${P.N ? " · " + P.N + " en total" : ""}` };
       case "pictogram": {
         const total = P.N != null && P.N >= P.sumN ? P.N : P.sumN;
-        const segs = it.map((i, k) => ({ count: i.n, label: i.label, color: order[k % order.length] }));
+        const segs = it.map((i, k) => ({ count: i.n, label: i.label, color: colorFor(i, k) }));
         if (total > P.sumN) segs.push({ count: total - P.sumN, label: "Sin respuesta / otras", hollow: true });
         return { total, segments: segs };
       }
@@ -218,17 +221,17 @@
         return Object.assign(base, { items: desc.slice(0, form === "radial" ? 8 : 12).map((i, k) => ({ label: i.label, value: val(P, i), display: disp(i, true), color: k === 0 ? CORAL : ink })) });
       }
       case "bubbles": case "treemap":
-        return { bg: theme.hex, ink, accent: CORAL, items: desc.slice(0, 16).map(i => ({ label: i.label, value: val(P, i), display: disp(i, true), color: order[it.indexOf(i) % order.length] })) };
+        return { bg: theme.hex, ink, accent: CORAL, items: desc.slice(0, 16).map(i => ({ label: i.label, value: val(P, i), display: disp(i, true), color: colorFor(i, it.indexOf(i)) })) };
       case "network":
         return { bg: theme.hex, ink, accent: CORAL, center: P.N != null ? String(P.N) : "",
-                 items: desc.slice(0, 12).map((i, k) => ({ label: i.label, value: val(P, i), display: disp(i, true), color: k === 0 ? CORAL : order[1 + (it.indexOf(i) % (order.length - 1))] })) };
+                 items: desc.slice(0, 12).map((i, k) => ({ label: i.label, value: val(P, i), display: disp(i, true), color: k === 0 && !colorMap ? CORAL : colorFor(i, 1 + (it.indexOf(i) % (order.length - 1))) })) };
       case "donut": {
-        const items = it.map((i, k) => ({ label: i.label, value: i.v, display: disp(i, true), color: order[k % order.length] }));
+        const items = it.map((i, k) => ({ label: i.label, value: i.v, display: disp(i, true), color: colorFor(i, k) }));
         if (P.sumV < 99.5) items.push({ label: "Sin cifra en la fuente", value: r2(100 - P.sumV), display: "≈" + fnum(100 - P.sumV) + "%", hollow: true });
         return { bg: theme.hex, ink, accent: CORAL, items };
       }
       case "spiral": case "rose": case "nested":
-        return { bg: theme.hex, ink, accent: CORAL, items: desc.slice(0, form === "nested" ? 8 : 12).map(i => ({ label: i.label, value: val(P, i), display: disp(i, true), color: order[it.indexOf(i) % order.length] })) };
+        return { bg: theme.hex, ink, accent: CORAL, items: desc.slice(0, form === "nested" ? 8 : 12).map(i => ({ label: i.label, value: val(P, i), display: disp(i, true), color: colorFor(i, it.indexOf(i)) })) };
       case "slope": case "lines": case "heat": case "dumbbell": case "bump": case "rings": case "stream": case "radar":
         return { bg: theme.hex, ink, accent: CORAL, years: P.cmp.years, fmt: P.isPct ? v => fnum(v) + "%" : v => fnum(v),
                  series: P.cmp.series.map(z => Object.assign({}, z, { color: order[z.k % order.length] })) };
@@ -286,21 +289,56 @@
     return slide;
   }
 
-  /* "Años lado a lado": una mini-lámina POR AÑO (cada una con sus propios datos y su propia forma),
-     en vez de fusionar todo en un solo gráfico — así se compara mirando, no leyendo una leyenda. */
+  /* "Años lado a lado": UNA sola lámina (un título, un pie — no uno por panel) con un panel por año.
+     Todos los paneles usan la MISMA forma cuando los datos lo permiten (para que se puedan comparar a
+     simple vista) y la MISMA categoría recibe siempre el MISMO color en todos los paneles — el color seguía
+     antes al ranking de cada año, no a la categoría, así que el mismo tono podía significar cosas distintas
+     en paneles distintos. Se agrega además una lectura automática del cambio entre el primer y el último año. */
+  const MULTI_PREF = ["band", "donut", "ring", "rankedBars", "burst", "swarm", "pictogram", "cards", "stat"];
   function buildMultiples(P, theme) {
     const key = baseOf(P.q);
     const years = state.years.filter(y => (state.data[y] || []).some(x => baseOf(x) === key));
-    const grid = h("div", { class: "multiples-grid", style: `--n:${years.length}` });
-    years.forEach(y => {
-      const yq = state.data[y].find(x => baseOf(x) === key);
-      const yP = profile(yq);
-      const yForm = formsFor(yP)[0];
-      grid.appendChild(h("div", { class: "multiples-cell" },
-        h("span", { class: "multiples-year" }, y),
-        buildSlide(yP, yForm, theme, y)));
+    const profs = years.map(y => profile(state.data[y].find(x => baseOf(x) === key)));
+    const perYearForms = profs.map(p => new Set(formsFor(p)));
+    const common = MULTI_PREF.find(f => perYearForms.every(s => s.has(f)));
+
+    const labels = [];
+    profs.forEach(p => p.numeric.forEach(i => { if (!labels.includes(i.label)) labels.push(i.label); }));
+    const colorMap = {}; labels.forEach((l, i) => { colorMap[l] = theme.order[i % theme.order.length]; });
+
+    // tendencia: cómo cambió, entre el primer y el último año, la categoría que domina al inicio
+    let trend = null;
+    const p0 = profs[0], pN = profs[profs.length - 1];
+    if (years.length >= 2 && p0.isPct && pN.isPct) {
+      const top0 = [...p0.numeric].sort((a, b) => val(p0, b) - val(p0, a))[0];
+      const match = top0 && pN.numeric.find(i => i.label === top0.label);
+      if (top0 && match) {
+        const d = r2(match.v - top0.v);
+        trend = h("p", { class: "multi-trend" }, h("strong", null, top0.label), ` pasó de ${fnum(top0.v)}% en ${years[0]} a ${fnum(match.v)}% en ${years[years.length - 1]}`,
+          d === 0 ? " · sin cambio" : ` · ${d > 0 ? "+" : "−"}${fnum(Math.abs(d))} pp`);
+      }
+    }
+
+    const head = h("div", { class: "multi-head" },
+      h("span", { class: `tag-eyebrow ${theme.dark ? "on-coral" : "on-negro"} gc-tag` }, [P.q.familia, `${years[0]}–${years[years.length - 1]}`].filter(Boolean).join(" · ")),
+      h("h2", { class: "multi-title" }, short(P.q.pregunta)),
+      trend);
+
+    const cols = h("div", { class: "multi-cols" });
+    years.forEach((y, i) => {
+      const yP = profs[i], yForm = common || formsFor(yP)[0];
+      const chart = h("div", { class: "gc-chart multi-chart" });
+      if (yForm === "stat") renderStat(chart, yP); else window.GCCharts.render(chart, yForm, build(yForm, yP, theme, colorMap));
+      const hd = headline(yP);
+      cols.appendChild(h("div", { class: "multi-col" }, h("span", { class: "multi-year" }, y), chart,
+        h("p", { class: "multi-figure" }, hd.big, h("small", null, hd.cap))));
     });
-    return grid;
+
+    return h("section", { class: `slide ${theme.cls} multi-slide`, "aria-label": `${short(P.q.pregunta)} — años lado a lado` },
+      h("div", { class: "multi-pad" }, head, cols),
+      h("div", { class: "firma" },
+        h("span", { class: "firma-left" }, h("img", { src: `assets/img/logo-faaad-${theme.dark ? "blanco" : "negro"}.png`, alt: "FaAADudp" }), h("span", { class: "escuela-tag" }, "Escuela de Diseño")),
+        h("span", { class: "doc-tag" }, `Comparación · ${years.length} años`)));
   }
 
   function drawStage(P, form) {
