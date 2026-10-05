@@ -450,10 +450,52 @@
       yearLegend(s, d, 20, 30);
     }
 
+    /* ----------------------- Composición editorial ----------------------- */
+    /* No es "una caja con un gráfico adentro": la cifra líder se apoya en el borde izquierdo a tamaño de
+       titular (como un número que se sale de una revista, no uno centrado en una tarjeta); el resto de las
+       categorías son anotaciones repartidas a distinta escala según su valor, unidas con una línea curva —
+       no una regla recta— a su dato real sobre una línea base común. */
+    function editorial(host, d) {
+      const s = mk(host), items = d.items.filter(i => i.value > 0).slice(0, 5);
+      if (!items.length) return;
+      const [top, ...rest] = items, marks = [];
+
+      const hx = 50, hy = 320, len = top.display.length;
+      const hfs = Math.min(175, 860 / Math.max(len, 1));
+      const head = s.append("g");
+      head.append("text").attr("x", hx).attr("y", hy).attr("font-size", hfs).attr("font-weight", 700)
+        .style("font-family", "'Work FaAAD','Work Sans',sans-serif").attr("fill", top.color).text(top.display);
+      head.append("text").attr("x", hx + 3).attr("y", hy + 38).attr("font-size", 24).attr("fill", "currentColor").text(clip(top.label, 34));
+      head.append("title").text(`${top.label} — ${top.display}`);
+      marks.push(head);
+
+      if (rest.length) {
+        const dotY = 272, baseX = Math.max(430, hx + hfs * len * .6 + 100), spanX = 960 - baseX, n = rest.length;
+        s.append("line").attr("x1", baseX - 30).attr("y1", dotY).attr("x2", 975).attr("y2", dotY).attr("stroke", "currentColor").attr("stroke-opacity", .15);
+        const mx = d3.max(rest, i => i.value) || 1;
+        rest.forEach((it, i) => {
+          const x = baseX + ((i + .5) / n) * spanX, above = i % 2 === 0, tier = Math.floor(i / 2);
+          const y = above ? 76 + tier * 58 : 492 - tier * 58;
+          const fs = 14 + Math.sqrt(it.value / mx) * 18, rot = (above ? -1 : 1) * (3 + (i * 7) % 7);
+          const ly = y + (above ? 15 : -15), midY = (dotY + ly) / 2 + (above ? -34 : 34);
+          const m = s.append("g");
+          m.append("path").attr("d", `M${x},${dotY} Q${x},${midY} ${x},${ly}`).attr("fill", "none").attr("stroke", "currentColor").attr("stroke-opacity", .4).attr("stroke-width", 1.2);
+          m.append("circle").attr("cx", x).attr("cy", dotY).attr("r", 5).attr("fill", it.color);
+          const t = m.append("text").attr("x", x).attr("y", y).attr("text-anchor", "middle").attr("font-weight", 700).attr("fill", it.color)
+            .attr("transform", `rotate(${rot} ${x} ${y})`);
+          t.append("tspan").attr("font-size", fs).text(it.display);
+          t.append("tspan").attr("x", x).attr("dy", fs * .9).attr("font-size", fs * .4).attr("font-weight", 500).attr("fill", "currentColor").text(clip(it.label, 20));
+          m.append("title").text(`${it.label} — ${it.display}`);
+          marks.push(m);
+        });
+      }
+      hover(marks);
+    }
+
     [["radial", "Barras radiales", radial], ["lollipop", "Puntos conectados", lollipop], ["bubbles", "Burbujas", bubbles],
      ["treemap", "Mosaico", treemap], ["network", "Constelación", network], ["donut", "Dona", donut],
      ["slope", "Pendiente entre años", slope], ["lines", "Líneas por año", lines], ["heat", "Mapa de calor por año", heat],
-     ["spiral", "Espiral radial", spiral], ["rose", "Rosa de Nightingale", rose], ["nested", "Círculos anidados", nested],
+     ["spiral", "Espiral radial", spiral], ["rose", "Rosa de Nightingale", rose], ["nested", "Círculos anidados", nested], ["editorial", "Composición editorial", editorial],
      ["dumbbell", "Haltera entre años", dumbbell], ["bump", "Ranking entre años", bump], ["rings", "Anillos por año", rings], ["stream", "Río de categorías", stream], ["radar", "Radar por año", radar]]
       .forEach(([k, l, f]) => G.register(k, l, f));
     document.dispatchEvent(new Event("gc:d3-ready"));

@@ -25,7 +25,7 @@
 
   const ONE_D3 = ["radial", "lollipop", "bubbles", "treemap", "network", "donut"];
   const CMP = ["slope", "lines", "heat"];
-  const RARE1 = ["spiral", "rose", "nested"];
+  const RARE1 = ["spiral", "rose", "nested", "editorial"];
   const RARE_CMP = ["dumbbell", "bump", "rings", "stream", "radar"];
   const RARE = [...RARE1, ...RARE_CMP];
   const MULTI = "multiples"; // "años lado a lado": una mini-lámina por año, no un gráfico fusionado
@@ -138,6 +138,7 @@
       if (n >= 4) rare.push("spiral");
       if (n >= 3) rare.push("rose");
       if (n >= 3 && n <= 8) rare.push("nested");
+      if (n >= 3) rare.push("editorial");
       if (P.cmp) {
         const c = P.cmp, shares = P.isPct && c.sums.every(x => x >= 85 && x <= 105);
         rare.push("dumbbell");
@@ -230,8 +231,8 @@
         if (P.sumV < 99.5) items.push({ label: "Sin cifra en la fuente", value: r2(100 - P.sumV), display: "≈" + fnum(100 - P.sumV) + "%", hollow: true });
         return { bg: theme.hex, ink, accent: CORAL, items };
       }
-      case "spiral": case "rose": case "nested":
-        return { bg: theme.hex, ink, accent: CORAL, items: desc.slice(0, form === "nested" ? 8 : 12).map(i => ({ label: i.label, value: val(P, i), display: disp(i, true), color: colorFor(i, it.indexOf(i)) })) };
+      case "spiral": case "rose": case "nested": case "editorial":
+        return { bg: theme.hex, ink, accent: CORAL, items: desc.slice(0, form === "nested" ? 8 : form === "editorial" ? 5 : 12).map(i => ({ label: i.label, value: val(P, i), display: disp(i, true), color: colorFor(i, it.indexOf(i)) })) };
       case "slope": case "lines": case "heat": case "dumbbell": case "bump": case "rings": case "stream": case "radar":
         return { bg: theme.hex, ink, accent: CORAL, years: P.cmp.years, fmt: P.isPct ? v => fnum(v) + "%" : v => fnum(v),
                  series: P.cmp.series.map(z => Object.assign({}, z, { color: colorFor(z, z.k) })) };
