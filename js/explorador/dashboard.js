@@ -234,7 +234,7 @@
         return { bg: theme.hex, ink, accent: CORAL, items: desc.slice(0, form === "nested" ? 8 : 12).map(i => ({ label: i.label, value: val(P, i), display: disp(i, true), color: colorFor(i, it.indexOf(i)) })) };
       case "slope": case "lines": case "heat": case "dumbbell": case "bump": case "rings": case "stream": case "radar":
         return { bg: theme.hex, ink, accent: CORAL, years: P.cmp.years, fmt: P.isPct ? v => fnum(v) + "%" : v => fnum(v),
-                 series: P.cmp.series.map(z => Object.assign({}, z, { color: order[z.k % order.length] })) };
+                 series: P.cmp.series.map(z => Object.assign({}, z, { color: colorFor(z, z.k) })) };
       case "cards":
         return { cards: P.items.map(i => {
           const v = i.v != null ? fnum(i.v) + (i.unidad === "%" ? "%" : " " + i.unidad) : (i.n != null ? fnum(i.n) + (i.unidad ? " " + i.unidad : "") : "");
@@ -324,7 +324,17 @@
       h("h2", { class: "multi-title" }, short(P.q.pregunta)),
       trend);
 
-    const cols = h("div", { class: "multi-cols" });
+    // Resumen: UN gráfico fusionado (los mismos datos de "Comparar años") que cuenta la historia completa
+    // de un vistazo — mismos colores que los paneles de abajo, así las dos lecturas quedan como un solo sistema.
+    let summary = null;
+    if (P.cmp) {
+      const sumForm = P.cmp.years.length <= 2 ? "slope" : "lines";
+      const sumChart = h("div", { class: "gc-chart multi-summary-chart" });
+      window.GCCharts.render(sumChart, sumForm, build(sumForm, P, theme, colorMap));
+      summary = h("div", { class: "multi-summary" }, sumChart);
+    }
+
+    const cols = h("div", { class: "multi-cols" + (summary ? " is-detail" : "") });
     years.forEach((y, i) => {
       const yP = profs[i], yForm = common || formsFor(yP)[0];
       const chart = h("div", { class: "gc-chart multi-chart" });
@@ -334,8 +344,11 @@
         h("p", { class: "multi-figure" }, hd.big, h("small", null, hd.cap))));
     });
 
+    const body = h("div", { class: "multi-body" },
+      summary, summary ? h("span", { class: "multi-sub" }, "Detalle por año") : null, cols);
+
     return h("section", { class: `slide ${theme.cls} multi-slide`, "aria-label": `${short(P.q.pregunta)} — años lado a lado` },
-      h("div", { class: "multi-pad" }, head, cols),
+      h("div", { class: "multi-pad" }, head, body),
       h("div", { class: "firma" },
         h("span", { class: "firma-left" }, h("img", { src: `assets/img/logo-faaad-${theme.dark ? "blanco" : "negro"}.png`, alt: "FaAADudp" }), h("span", { class: "escuela-tag" }, "Escuela de Diseño")),
         h("span", { class: "doc-tag" }, `Comparación · ${years.length} años`)));
