@@ -52,11 +52,14 @@
   function groupQuestions(rows) {
     const map = new Map();
     rows.forEach(r => {
-      if (!map.has(r.pregunta)) map.set(r.pregunta, { pregunta: r.pregunta, familia: r.familia, rows: [] });
+      // "base" liga preguntas de años distintos aunque su texto no coincida (columna opcional pregunta_base del Sheet);
+      // sin esa columna, una pregunta solo se compara con otra que tenga el mismo texto exacto.
+      if (!map.has(r.pregunta)) map.set(r.pregunta, { pregunta: r.pregunta, familia: r.familia, base: (r.pregunta_base || "").trim() || r.pregunta, rows: [] });
       map.get(r.pregunta).rows.push(r);
     });
     return [...map.values()];
   }
+  const baseOf = x => x.base || x.pregunta;
 
   function setStatus(kind, text) {
     $("#dash-status-dot").className = "dot" + (kind === "ok" ? " ok" : kind === "err" ? " err" : "");
@@ -145,9 +148,10 @@
 
   /* Misma pregunta en varios años: una serie por categoría (color según su lugar de aparición, no su ranking) */
   function yearSeries(P) {
-    const yrs = state.years.filter(y => (state.data[y] || []).some(x => x.pregunta === P.q.pregunta));
+    const key = baseOf(P.q);
+    const yrs = state.years.filter(y => (state.data[y] || []).some(x => baseOf(x) === key));
     if (yrs.length < 2) return null;
-    const profs = yrs.map(y => profile(state.data[y].find(x => x.pregunta === P.q.pregunta)));
+    const profs = yrs.map(y => profile(state.data[y].find(x => baseOf(x) === key)));
     if (profs.some(pp => pp.kind === "empty" || pp.kind === "mixed" || pp.isPct !== P.isPct)) return null;
     const cats = [], first = [profs[yrs.indexOf(state.year)], ...profs.filter((_, i) => yrs[i] !== state.year)];
     first.forEach(pp => pp.numeric.forEach(i => { if (!cats.includes(i.label)) cats.push(i.label); }));
@@ -318,9 +322,12 @@
     renderThumbs(P, forms);
     $("#dash-formname").textContent = FORM_LABEL()[state.form] || state.form;
 
-    const others = state.years.filter(y => y !== state.year && (state.data[y] || []).some(x => x.pregunta === q.pregunta));
+    const qKey = baseOf(q);
+    const others = state.years.filter(y => y !== state.year && (state.data[y] || []).some(x => baseOf(x) === qKey));
     $("#dash-also").replaceChildren(...(others.length
-      ? ["También en", ...others.map(y => h("button", { type: "button", onclick: () => { state.year = y; state.open.add(y); renderMain(); } }, y))]
+      ? ["También en", ...others.map(y => h("button", { type: "button", onclick: () => {
+          state.year = y; state.q = state.data[y].find(x => baseOf(x) === qKey).pregunta; state.open.add(y); renderMain();
+        } }, y))]
       : ["Solo en " + state.year]));
 
     renderTable(q); renderTree(); saveHash();
@@ -384,7 +391,8 @@
         if (sc && sc !== sec) body.append(h("div", { class: "q-seccion" }, sc));
         sec = sc || null;
         // un punto por año: relleno si esa pregunta existe en ese año (así se ve dónde se puede comparar)
-        const pips = h("span", { class: "pips", title: "Años en que existe esta pregunta" }, state.years.map(yy => h("i", { class: "pip" + ((state.data[yy] || []).some(z => z.pregunta === x.pregunta) ? (yy === y ? " cur" : " on") : "") })));
+        const xKey = baseOf(x);
+        const pips = h("span", { class: "pips", title: "Años en que existe esta pregunta (o su equivalente)" }, state.years.map(yy => h("i", { class: "pip" + ((state.data[yy] || []).some(z => baseOf(z) === xKey) ? (yy === y ? " cur" : " on") : "") })));
         body.append(h("button", { type: "button", class: "q-item", "aria-current": String(y === state.year && x.pregunta === state.q),
           onclick: () => { state.year = y; state.q = x.pregunta; state.open.add(y); renderMain(); } }, h("span", null, short(x.pregunta)), pips));
       });

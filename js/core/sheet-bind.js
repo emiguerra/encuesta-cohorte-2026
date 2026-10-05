@@ -37,12 +37,14 @@
     const t = parseCSV(csvText);
     const h = t[0].map(s => s.trim());
     const ix = k => h.indexOf(k);
-    const col = { fam: ix("familia"), q: ix("pregunta"), cat: ix("categoria"), v: ix("valor"), u: ix("unidad"), n: ix("n_absoluto"), nt: ix("n_total_respuestas"), rg: ix("rango_logro"), nota: ix("nota") };
+    const col = { fam: ix("familia"), q: ix("pregunta"), cat: ix("categoria"), v: ix("valor"), u: ix("unidad"), n: ix("n_absoluto"), nt: ix("n_total_respuestas"), rg: ix("rango_logro"), nota: ix("nota"), base: ix("pregunta_base") };
     if (col.q < 0 || col.cat < 0 || col.v < 0) throw new Error("El Sheet no tiene las columnas pregunta/categoria/valor");
     return t.slice(1).filter(r => (r[col.q] || "").trim() !== "").map(r => ({
       familia: (r[col.fam] || "").trim(), pregunta: (r[col.q] || "").trim(), categoria: (r[col.cat] || "").trim(),
       valor: num(r[col.v]), unidad: (r[col.u] || "").trim(), n: num(r[col.n]), ntot: num(r[col.nt]),
       rango: (r[col.rg] || "").trim(), nota: (r[col.nota] || "").trim(),
+      // columna opcional: liga preguntas con texto distinto entre años que miden lo mismo (ver bloque 4D del README del Sheet)
+      pregunta_base: col.base < 0 ? "" : (r[col.base] || "").trim(),
     }));
   }
 
