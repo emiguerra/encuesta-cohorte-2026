@@ -80,6 +80,7 @@
     linea: { label: "Línea", radial: false },
     paleta: { label: "Paleta", radial: false },
     barras: { label: "Barras", radial: false },
+    mapa: { label: "Mapa", radial: false, geo: true },
   };
 
   const state = {
@@ -89,6 +90,35 @@
     meta: { title: "Elige una pregunta", crumb: "", note: "" }, message: "Cargando datos del Sheet…",
     free: "", freeByQ: {}, sub: null, ft: null, cambioYears: null, chartOnly: false,
   };
+  /* Mapas geográficos: comunas de la RM y regiones de Chile. Cada set trae polígonos (lon/lat) y sabe
+     resolver una etiqueta de dato a su forma. «Comuna de residencia» usa el de comunas; «Región de
+     procedencia» el de regiones. Se cargan una vez. */
+  const geoKey = s => (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+  function makeSet(shapes, find, flat) {
+    let lo = [Infinity, Infinity], hi = [-Infinity, -Infinity];
+    shapes.forEach(c => c.r.forEach(([x, y]) => { lo[0] = Math.min(lo[0], x); lo[1] = Math.min(lo[1], y); hi[0] = Math.max(hi[0], x); hi[1] = Math.max(hi[1], y); }));
+    return { shapes, bounds: { lo, hi, cy: (lo[1] + hi[1]) / 2 }, find, flat };
+  }
+  const GEO = { comuna: null, region: null };
+  fetch("assets/geo/rm-comunas.json").then(r => r.json()).then(j => {
+    const by = {}; j.comunas.forEach(c => by[geoKey(c.name)] = c);
+    GEO.comuna = makeSet(j.comunas, lab => by[geoKey(lab)] || null, j.flat);
+  }).catch(e => console.warn("[mapa] comunas RM:", e));
+  fetch("assets/geo/cl-regiones.json").then(r => r.json()).then(j => {
+    GEO.region = makeSet(j.regiones, lab => {
+      const k = geoKey(lab).replace("'", "") === "ohiggins" ? "higgins" : geoKey(lab);
+      return j.regiones.find(r => geoKey(r.name).includes(k)) || null;
+    }, j.flat);
+  }).catch(e => console.warn("[mapa] regiones Chile:", e));
+  // devuelve el set geográfico (comuna o región) si varias categorías de la pregunta calzan con él
+  function geoMatch(P) {
+    for (const key of ["comuna", "region"]) {
+      const set = GEO[key]; if (!set) continue;
+      if (P.numeric.filter(i => set.find(i.label)).length >= 3) return set;
+    }
+    return null;
+  }
+
   const logos = {};
   // el lockup se guarda como canvas: así sirve igual para el lienzo y para el SVG (queda incrustado, no como ruta relativa)
   ["negro", "blanco"].forEach(k => {
@@ -233,7 +263,15 @@
     if (!state.cmp && state.mode !== "valor") state.mode = "valor";
     state.free = state.freeByQ[year + "|" + pregunta] || ""; $("#tm-free").value = state.free;
     state.meta.title = q.pregunta;
+    state.meta.enun = (q.enunciado_original || "").trim();
     state.meta.crumb = state.meta.baseCrumb = [year, q.familia].filter(Boolean).join(" · ");
+    // enunciado literal del formulario, mostrado en el editor (chrome HTML, no sobre el gráfico)
+    const enunEl = document.getElementById("tm-enun");
+    if (enunEl) {
+      const e = state.meta.enun;
+      if (e && e !== q.pregunta) { enunEl.textContent = e; enunEl.title = e; enunEl.hidden = false; }
+      else { enunEl.textContent = ""; enunEl.hidden = true; }
+    }
     const items = buildItems();
     state.message = items.length ? "" : "Esta pregunta no trae cifras que dibujar (respuesta abierta o unidades mezcladas).";
     state.playing = false;
@@ -254,12 +292,14 @@
   }
   const CMP_FORMS = ["barras", "paleta", "linea", "espiral"];  // en Comparar años: formas donde los años conviven sin taparse
   function availableForms() {
+    const geo = state.P && geoMatch(state.P);
     if (state.mode === "comparar") return CMP_FORMS.slice();
-    return Object.keys(FORMS).filter(k => !(state.signed && FORMS[k].radial));
+    return Object.keys(FORMS).filter(k => FORMS[k].geo ? !!geo : !(state.signed && FORMS[k].radial));
   }
   function renderControls() {
-    const av = availableForms();
-    $("#tm-forms").replaceChildren(...Object.entries(FORMS).map(([k, f]) =>
+    const av = availableForms(), geo = state.P && geoMatch(state.P);
+    // el Mapa solo se muestra en preguntas geográficas; los demás se muestran siempre (deshabilitados si no aplican)
+    $("#tm-forms").replaceChildren(...Object.entries(FORMS).filter(([k, f]) => !f.geo || geo).map(([k, f]) =>
       btn(f.label, k === state.form, () => setForm(k), { disabled: !av.includes(k), title: !av.includes(k) ? (state.mode === "comparar" ? "Para comparar años usa Barras, Paleta, Línea o Espiral" : "Con valores negativos solo funcionan las formas con eje") : "" })));
     $("#tm-mode").replaceChildren(
       btn("Valor", state.mode === "valor", () => setMode("valor")),
@@ -764,6 +804,115 @@
     espiral: { mask: maskCmpEspiral, over: overCmpEspiral },
   };
 
+  /* =================== Mapa de calor de comunas (RM) =================== */
+  // color del chip de la leyenda = el mismo gradiente tonal evaluado en el valor de la comuna
+  function heatColor(fr) {
+    const [a, b] = currentPal().pairs[0];
+    const mix = (x, y, t) => Math.round(parseInt(x, 16) * (1 - t) + parseInt(y, 16) * t);
+    const f = Math.max(.25, fr);  // mismo piso que la máscara
+    return "#" + [1, 3, 5].map(i => mix(a.slice(i, i + 2), b.slice(i, i + 2), f).toString(16).padStart(2, "0")).join("");
+  }
+  // caja del mapa: deja espacio para la leyenda (columna a la derecha en apaisado, bloque abajo en vertical)
+  // comunas reconocibles de la pregunta completa (ignora el recorte a 8 y el agregado «Otras comunas»)
+  function mapItems() {
+    const set = state.P && geoMatch(state.P);
+    if (!set) return { items: [], max: 1, set: null };
+    const items = state.P.numeric.map(i => ({ label: i.label, value: DatosEncuesta.val(state.P, i), com: set.find(i.label) })).filter(o => o.com);
+    return { items, max: Math.max(1, ...items.map(o => o.value)), set };
+  }
+  const mapFrac = (v, mx) => Math.max(0, Math.min(1, v / mx));
+  function mapLayout() {
+    const b = chartBox(), land = W / H >= 1.25;
+    const withData = mapItems().items;
+    const legN = withData.length, fs = FS();
+    const legW = land ? Math.min(W * .32, 280) : 0, legH = land ? 0 : Math.min(b.y1 - b.y0, Math.ceil(legN / 2 + 1) * fs * 1.5);
+    const map = { x0: b.x0, y0: b.y0, x1: b.x1 - (land ? legW + 24 : 0), y1: b.y1 - (land ? 0 : legH + 10) };
+    return { land, withData, fs, legW, legH, map, box: b };
+  }
+  // encuadre: el mapa de regiones se acerca a la zona con datos (Chile entero queda como un hilo);
+  // el de comunas muestra toda la RM. padFrac agrega margen de contexto alrededor de las zonas con dato.
+  function boundsOf(shapes, padFrac) {
+    let lo = [Infinity, Infinity], hi = [-Infinity, -Infinity];
+    shapes.forEach(c => c.r.forEach(([x, y]) => { lo[0] = Math.min(lo[0], x); lo[1] = Math.min(lo[1], y); hi[0] = Math.max(hi[0], x); hi[1] = Math.max(hi[1], y); }));
+    const px = (hi[0] - lo[0]) * padFrac, py = (hi[1] - lo[1]) * padFrac;
+    lo = [lo[0] - px, lo[1] - py]; hi = [hi[0] + px, hi[1] + py];
+    return { lo, hi, cy: (lo[1] + hi[1]) / 2 };
+  }
+  function mapFrame() {
+    const m = mapLayout().map, { items, set } = mapItems();
+    // regiones: encuadra a la MASA de los datos (regiones que suman ≥90%), no a un outlier lejano (p. ej. Los
+    // Lagos con 2 personas estiraría todo Chile); comunas: toda la RM.
+    let gb = (set || GEO.comuna).bounds;
+    if (set === GEO.region && items.length) {
+      const tot = items.reduce((a, o) => a + o.value, 0) || 1, srt = [...items].sort((a, b) => b.value - a.value);
+      const core = []; let acc = 0;
+      for (const o of srt) { core.push(o.com); acc += o.value; if (acc >= tot * 0.9) break; }
+      gb = boundsOf(core, 0.7);
+    }
+    const flat = (set || GEO.comuna).flat;
+    const cosLat = flat ? 1 : Math.cos(gb.cy * Math.PI / 180);
+    const spanX = (gb.hi[0] - gb.lo[0]) * cosLat, spanY = gb.hi[1] - gb.lo[1];
+    const sc = Math.min((m.x1 - m.x0) / spanX, (m.y1 - m.y0) / spanY) * .96;
+    const ox = m.x0 + ((m.x1 - m.x0) - spanX * sc) / 2, oy = m.y0 + ((m.y1 - m.y0) - spanY * sc) / 2;
+    // flat: coords ya proyectadas (y hacia abajo); geográfico: lon/lat con flip de y
+    const proj = flat ? ((x, y) => [ox + (x - gb.lo[0]) * sc, oy + (y - gb.lo[1]) * sc])
+                      : ((lon, lat) => [ox + (lon - gb.lo[0]) * cosLat * sc, oy + (gb.hi[1] - lat) * sc]);
+    return { proj, sc };
+  }
+  // traza el polígono directamente en el contexto (no usa Path2D: el exportador SVG no lo soporta)
+  function tracePath(c, shape, proj) {
+    c.beginPath();
+    shape.r.forEach(([lon, lat], i) => { const [x, y] = proj(lon, lat); i ? c.lineTo(x, y) : c.moveTo(x, y); });
+    c.closePath();
+  }
+  function comunaCentroid(c, proj) {
+    let sx = 0, sy = 0; c.r.forEach(([lon, lat]) => { const [x, y] = proj(lon, lat); sx += x; sy += y; });
+    return [sx / c.r.length, sy / c.r.length];
+  }
+  function maskMapa(c) {
+    const f = mapFrame(), { items, max, set } = mapItems();
+    if (!set) return;
+    const mb = mapLayout().map; c.save(); c.beginPath(); c.rect(mb.x0, mb.y0, mb.x1 - mb.x0, mb.y1 - mb.y0); c.clip();
+    c.fillStyle = "#fff";
+    items.forEach(o => { c.save(); c.globalAlpha = 0.35 + 0.65 * mapFrac(o.value, max); tracePath(c, o.com, f.proj); c.fill(); c.restore(); });
+    c.restore();
+  }
+  function overMapa(c, P) {
+    const set = mapItems().set;
+    if (!set) { c.fillStyle = P.ink; c.textAlign = "center"; c.font = `400 14px "Work Sans"`; c.fillText("Cargando mapa…", W / 2, H / 2); return; }
+    const L = mapLayout(), f = mapFrame(), fs = L.fs, max = mapItems().max;
+    c.save(); c.beginPath(); c.rect(L.map.x0, L.map.y0, L.map.x1 - L.map.x0, L.map.y1 - L.map.y0); c.clip();
+    c.strokeStyle = P.grid; c.lineWidth = 1;
+    set.shapes.forEach(com => { tracePath(c, com, f.proj); c.stroke(); });
+    const ranked = [...L.withData].sort((a, b) => b.value - a.value);
+    c.strokeStyle = P.ink; c.lineWidth = 1.4;
+    ranked.forEach(o => { tracePath(c, o.com, f.proj); c.stroke(); });
+    ranked.forEach((o, i) => {
+      const [x, y] = comunaCentroid(o.com, f.proj);
+      c.fillStyle = P.ink; c.beginPath(); c.arc(x, y, Math.max(7, fs * .58), 0, Math.PI * 2); c.fill();
+      c.fillStyle = P.pillInk; c.font = `600 ${fs * .7}px "Work Sans"`; c.textAlign = "center"; c.textBaseline = "middle";
+      c.fillText(String(i + 1), x, y + .5);
+    });
+    c.restore();  // fin del clip del mapa; la leyenda va fuera
+    // leyenda: en apaisado una columna a la derecha; si hay muchas, dos columnas
+    const rowH = fs * 1.5, chip = fs * .72;
+    const cols = (!L.land && ranked.length > 6) ? 2 : 1;
+    const colW = (L.land ? L.legW : (L.box.x1 - L.box.x0)) / cols;
+    const lx0 = L.land ? L.box.x1 - L.legW : L.box.x0, ly0 = L.land ? L.map.y0 + 4 : L.map.y1 + 14;
+    const perCol = Math.ceil(ranked.length / cols);
+    c.textBaseline = "middle";
+    ranked.forEach((o, i) => {
+      const col = Math.floor(i / perCol), lx = lx0 + col * colW, ly = ly0 + (i - col * perCol) * rowH;
+      c.fillStyle = P.ink; c.font = `500 ${fs * .8}px "Work Sans"`; c.textAlign = "left";
+      c.fillText(String(i + 1), lx, ly + rowH / 2);
+      c.fillStyle = heatColor(mapFrac(o.value, max)); c.strokeStyle = P.grid; c.lineWidth = 1;
+      roundRect(c, lx + fs, ly + rowH / 2 - chip / 2, chip, chip, 3); c.fill(); c.stroke();
+      c.fillStyle = P.ink; c.fillText(clip(o.label, cols > 1 ? 12 : 18), lx + fs + chip + 7, ly + rowH / 2);
+      c.textAlign = "right"; c.font = `600 ${fs * .85}px "Work Sans"`;
+      c.fillText(fmt(o.value) + (state.isPct ? "%" : ""), lx + colW - 8, ly + rowH / 2);
+    });
+  }
+
   // layered: la forma tiene una pieza por categoría (el motor podría darle un gradiente a cada una si la
   // paleta trae varios pares; hoy cada gráfico usa uno solo). Línea y Nube son una sola forma continua.
   const DRAW = {
@@ -773,6 +922,7 @@
     linea: { mask: maskLinea, over: overLinea, layered: false },
     paleta: { mask: maskPaleta, over: overPaleta, layered: true },
     barras: { mask: maskBarras, over: overBarras, layered: true },
+    mapa: { mask: maskMapa, over: overMapa, layered: false },
   };
 
   /* =================== Marco editorial (manual p.34, construcción de un post) ===================
@@ -815,7 +965,7 @@
     else if (P.kind === "single") a = "% de estudiantes que eligió cada opción (una por persona: suman 100%).";
     else if (P.kind === "partial") a = "% de estudiantes por opción.";
     else a = "Número de estudiantes por opción.";
-    const key = { espiral: "El largo de cada arco es el valor (escala en el borde).", rosa: "El área de cada pétalo es el valor.", nube: "La distancia al centro es el valor." }[state.form] || "";
+    const key = { espiral: "El largo de cada arco es el valor (escala en el borde).", rosa: "El área de cada pétalo es el valor.", nube: "La distancia al centro es el valor.", mapa: "Cada zona se colorea según su valor; los agregados («Otras comunas», «Otras regiones») no se ubican en el mapa." }[state.form] || "";
     const otros = state.vis.some(v => /^Otros \(/.test(v.label)) ? "«Otros» suma las opciones menores." : "";
     return [a, key, otros].filter(Boolean).join(" ");
   }
@@ -942,6 +1092,7 @@
     if (form === "espiral") { const g = spiralGeo(); return { mode: 3, p: [...u(g.cx, g.cy), Math.max(.1, Math.PI * 1.5 - g.halo / (g.R - g.step * .5)), 0] }; }
     if (form === "rosa") { const g = roseGeo(); return { mode: 2, p: [...u(g.cx, g.cy), g.r0 / H, (g.R * .92) / H] }; }
     if (form === "nube") { const g = cloudGeo(); return { mode: 2, p: [...u(g.cx, g.cy), (g.R * .18) / H, (g.R * .76) / H] }; }
+    if (form === "mapa") return { mode: 4, p: [0, 1, 0, 0] };  // color por valor (intensidad de la máscara)
     const g = cartGeo();
     return { mode: 1, p: [1 - g.y0 / H, 1 - g.yOf(state.dom.max) / H, 0, 0] };
   }
@@ -970,7 +1121,7 @@
     if (thermal) {
       ctx.drawImage(lastThermal = thermal.render({
         width: out.width, height: out.height, time, grain: .03,
-        bg: P.bg, field: P.field, fieldAmt: P.fieldAmt, transparent: state.noBg,
+        bg: P.bg, field: P.field, fieldAmt: state.form === "mapa" ? P.fieldAmt * .35 : P.fieldAmt, transparent: state.noBg,
         layers: n, drawLayer, pair: i => cmp ? [yearColor(i), yearColor(i)] : P.pairs[(layered ? i : 0) % P.pairs.length],
         sigma: cmp && state.form === "espiral" ? cmpSpiralGeo().sigmaC : sigmaFor(state.form), gain: THIN.has(state.form) ? 1.75 : 1.2, s1: .3,
         grad: cmp ? { mode: 0, p: [0, 0, 1, 1] } : gradFor(state.form),
@@ -1013,29 +1164,35 @@
   function formsFor(P) {
     if (P.kind === "empty" || P.kind === "mixed") return [];
     if (P.kind === "value") return ["espiral", "barras"];
-    return Object.keys(FORMS);
+    const base = Object.keys(FORMS).filter(k => !FORMS[k].geo);
+    return geoMatch(P) ? ["mapa", ...base] : base;
   }
-  function snapshot(year, q, form, colors) {
+  // dibuja una lámina (pregunta+gráfico) en un lienzo dado; base del thumbnail y del informe
+  function renderSlideTo(target, year, q, form, colors, opts) {
+    opts = opts || {};
     const saved = {}; SNAP_KEYS.forEach(k => { saved[k] = state[k]; });
     const savedT = { out, ctx, W, H, DPR, mw: mask.width, mh: mask.height };
     try {
-      state.P = DatosEncuesta.profile(q); state.cmp = null; state.mode = "valor"; state.form = form;
+      state.P = DatosEncuesta.profile(q); state.mode = "valor"; state.form = form;
+      state.cmp = (state.P.kind !== "empty" && state.P.kind !== "mixed") ? DatosEncuesta.yearSeries(state.P) : null;
       if (colors) state.colors = colors;
-      state.noBg = false; state.free = ""; state.chartOnly = false;  // las miniaturas: slide completo, con fondo y sin texto libre
-      state.showTitle = false; state.playing = false; state.message = "";
+      state.noBg = false; state.free = opts.free || ""; state.chartOnly = false;
+      state.showTitle = !!opts.title; state.playing = false; state.message = "";
       state.meta = { title: q.pregunta, crumb: [year, q.familia].filter(Boolean).join(" · "), note: "" };
       const items = buildItems();
       state.vis = items.map(it => ({ label: it.label, cur: it.value, target: it.value, delay: 0 }));
       state.dom = state.domT = domainFor(items.map(i => i.value)); state.signed = state.dom.min < 0;
-      out = snap; ctx = snapCtx; W = SNAP_W; H = SNAP_H; DPR = 1;
+      if (!availableForms().includes(form)) state.form = recommendedForm(state.P);
+      out = target; ctx = target.getContext("2d"); W = target.width; H = target.height; DPR = 1;
       mask.width = Math.round(W * MASK_SCALE); mask.height = Math.round(H * MASK_SCALE);
       draw();
     } finally {
       SNAP_KEYS.forEach(k => { state[k] = saved[k]; });
       ({ out, ctx, W, H, DPR } = savedT); mask.width = savedT.mw; mask.height = savedT.mh;
     }
-    return snap;
+    return target;
   }
+  function snapshot(year, q, form, colors) { return renderSlideTo(snap, year, q, form, colors, {}); }
 
   const gallery = { year: null, queue: [], io: null, onlyCmp: false };  // year null = el más reciente
   const isGallery = () => document.body.classList.contains("view-gallery");
@@ -1057,6 +1214,7 @@
      las demás quedan como chips que cambian la vista al pasar el mouse. */
   function recommendedForm(P) {
     const n = P.numeric.length;
+    if (geoMatch(P)) return "mapa";                              // preguntas de comuna: mapa
     if (P.kind === "value") return "espiral";                    // una cifra: un anillo contra el 100
     if (P.kind === "multi" || n > 5) return "barras";            // ranking / muchas categorías: comparar largos
     if (P.kind === "counts") return "paleta";                    // conteos: altura exacta de cada uno
@@ -1066,7 +1224,8 @@
   // dato principal de la tarjeta: la categoría más grande y su valor
   function leadStat(P) {
     if (!P.numeric.length) return "";
-    const top = [...P.numeric].sort((a, b) => DatosEncuesta.val(P, b) - DatosEncuesta.val(P, a))[0], v = DatosEncuesta.val(P, top);
+    const real = P.numeric.filter(i => !/^otr[oa]s?\b/i.test(i.label || ""));
+    const top = [...(real.length ? real : P.numeric)].sort((a, b) => DatosEncuesta.val(P, b) - DatosEncuesta.val(P, a))[0], v = DatosEncuesta.val(P, top);
     const num = (Math.abs(v) >= 10 ? String(Math.round(v)) : v.toFixed(1).replace(".", ",")) + (P.isPct ? "%" : "");
     return [top.label, num].filter(Boolean).join(" · ");
   }
@@ -1140,6 +1299,10 @@
     const cmp = (P.kind !== "empty" && P.kind !== "mixed") ? DatosEncuesta.yearSeries(P) : null;
     crumb.textContent = [P.N ? `n = ${P.N}` : "", cmp ? "comparable " + cmp.years.filter(x => x !== y).join(", ") : ""].filter(Boolean).join(" · ");
     const h = document.createElement("h3"); h.textContent = q.pregunta; h.title = q.pregunta;
+    // enunciado literal del formulario (si está en el Sheet y no repite el título): así se ve de qué pregunta real salió
+    const enunTxt = (q.enunciado_original || "").trim();
+    const enun = document.createElement("p"); enun.className = "tm-card-enun";
+    if (enunTxt && enunTxt !== q.pregunta) { enun.textContent = enunTxt; enun.title = enunTxt; }
     const lead = document.createElement("p"); lead.className = "tm-card-lead"; lead.textContent = leadStat(P);
 
     // chips de forma: pasar el mouse cambia la vista previa; clic abre el editor en esa forma
@@ -1158,7 +1321,9 @@
       b.addEventListener("click", () => openEditor(y, q.pregunta, f));
       chips.appendChild(b);
     });
-    el.append(th, crumb, h, lead, chips);
+    el.append(th, crumb, h);
+    if (enunTxt && enunTxt !== q.pregunta) el.append(enun);
+    el.append(lead, chips);
     return el;
   }
   $("#tm-gsearch").addEventListener("input", renderGallery);
@@ -1203,6 +1368,100 @@
   function download(blob, name) {
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  }
+
+  /* =================== Informe del año (deck → PDF / Word) ===================
+     Un resultado, no editable: portada + una lámina por pregunta graficable del año (su gráfico
+     recomendado, con título y el color de su familia) + separadores por familia. Se baja en PDF o .docx. */
+  function loadScript(src) {
+    return new Promise((res, rej) => {
+      if ([...document.scripts].some(s => s.src === src)) return res();
+      const sc = document.createElement("script"); sc.src = src;
+      sc.onload = res; sc.onerror = () => rej(new Error("No pude cargar " + src));
+      document.head.appendChild(sc);
+    });
+  }
+  const SLIDE_W = 1600, SLIDE_H = 900;
+  function newCanvas() { const c = document.createElement("canvas"); c.width = SLIDE_W; c.height = SLIDE_H; return c; }
+  function palOf(colors) {  // paleta resuelta desde una combinación {bg,a,b,field}
+    const sv = state.colors; state.colors = colors; const P = currentPal(); state.colors = sv; return P;
+  }
+  function coverCanvas(year, N) {
+    const c = newCanvas(), x = c.getContext("2d"), P = palOf(PRESETS[0]), pad = 90;
+    x.fillStyle = P.bg; x.fillRect(0, 0, SLIDE_W, SLIDE_H);
+    x.fillStyle = P.ink; x.textBaseline = "alphabetic";
+    x.font = `400 26px "Necto Mono"`; x.fillText("ENCUESTA COHORTE", pad, pad + 20);
+    x.font = `400 190px "Work FaAAD"`; x.fillText(String(year), pad, 430);
+    x.font = `400 40px "Work Sans"`; x.fillText("Perfil de ingreso · Escuela de Diseño UDP", pad, 500);
+    if (N) { x.font = `500 30px "Work Sans"`; x.fillText(`${N} respuestas`, pad, 560); }
+    const lg = logos[P.logo]; if (lg) { const h = 46; x.drawImage(lg, pad, SLIDE_H - pad - h, h * lg.width / lg.height, h); }
+    x.textAlign = "right"; x.font = `400 30px "Work Sans"`; x.fillText("Escuela de Diseño", SLIDE_W - pad, SLIDE_H - pad - 6);
+    return c;
+  }
+  function dividerCanvas(familia, colors) {
+    const c = newCanvas(), x = c.getContext("2d"), P = palOf(colors), pad = 90;
+    const [a, b] = P.pairs[0];
+    const g = x.createLinearGradient(0, 0, SLIDE_W, SLIDE_H); g.addColorStop(0, a); g.addColorStop(1, b);
+    x.fillStyle = g; x.fillRect(0, 0, SLIDE_W, SLIDE_H);
+    const dark = !COL[colors.bg].dark ? false : true; x.fillStyle = COL[colors.a].dark ? "#FFFFFF" : "#1C1C1C";
+    x.textBaseline = "alphabetic"; x.font = `400 24px "Necto Mono"`; x.fillText("ÁMBITO", pad, pad + 18);
+    x.font = `400 96px "Work FaAAD"`;
+    wrapText(x, familia, SLIDE_W - pad * 2).slice(0, 3).forEach((l, i) => x.fillText(l, pad, 440 + i * 96));
+    return c;
+  }
+  // preguntas graficables del año, agrupadas por familia (orden de la galería)
+  function reportItems(year) {
+    const qs = (DatosEncuesta.data[year] || []).filter(q => formsFor(DatosEncuesta.profile(q)).length);
+    const fams = []; qs.forEach(q => { const f = q.familia || "—"; if (!fams.includes(f)) fams.push(f); });
+    const items = [];
+    fams.forEach(f => {
+      items.push({ type: "divider", familia: f, colors: familyColors(f) });
+      qs.filter(q => (q.familia || "—") === f).forEach(q => items.push({ type: "chart", q, year, form: recommendedForm(DatosEncuesta.profile(q)), colors: familyColors(f) }));
+    });
+    return items;
+  }
+  function yearN(year) {
+    const q = (DatosEncuesta.data[year] || []).find(x => { const P = DatosEncuesta.profile(x); return P.N; });
+    return q ? DatosEncuesta.profile(q).N : null;
+  }
+  // genera todos los lienzos del informe, cediendo el hilo entre láminas (no congela la página)
+  async function buildReport(year, onProgress) {
+    const items = reportItems(year), canvases = [coverCanvas(year, yearN(year))];
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i];
+      if (it.type === "divider") canvases.push(dividerCanvas(it.familia, it.colors));
+      else { const c = newCanvas(); renderSlideTo(c, it.year, it.q, it.form, it.colors, { title: true }); canvases.push(c); }
+      if (onProgress) onProgress(i + 1, items.length);
+      await new Promise(r => setTimeout(r, 0));
+    }
+    return canvases;
+  }
+  async function exportReportPDF(year, onProgress) {
+    await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
+    const canvases = await buildReport(year, onProgress);
+    const { jsPDF } = window.jspdf, W = 297, H = W * SLIDE_H / SLIDE_W;  // mm, 16:9
+    const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: [W, H] });
+    canvases.forEach((cv, i) => { if (i) pdf.addPage([W, H], "landscape"); pdf.addImage(cv.toDataURL("image/jpeg", 0.92), "JPEG", 0, 0, W, H); });
+    pdf.save(`informe-encuesta-cohorte-${year}.pdf`);
+  }
+  async function exportReportDOCX(year, onProgress) {
+    await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js");
+    const canvases = await buildReport(year, onProgress), zip = new window.JSZip();
+    const media = zip.folder("word").folder("media");
+    const rels = [], body = [];
+    const EMU_W = 9144000, EMU_H = Math.round(EMU_W * SLIDE_H / SLIDE_W);  // 10" de ancho, 16:9
+    canvases.forEach((cv, i) => {
+      const b64 = cv.toDataURL("image/jpeg", 0.9).split(",")[1];
+      media.file(`image${i + 1}.jpg`, b64, { base64: true });
+      rels.push(`<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/image${i + 1}.jpg"/>`);
+      body.push(`<w:p><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${EMU_W}" cy="${EMU_H}"/><wp:docPr id="${i + 1}" name="lamina${i + 1}"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${i + 1}" name="lamina${i + 1}"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId${i + 1}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${EMU_W}" cy="${EMU_H}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>` + (i < canvases.length - 1 ? `<w:p><w:r><w:br w:type="page"/></w:r></w:p>` : ""));
+    });
+    zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="jpeg" ContentType="image/jpeg"/><Default Extension="jpg" ContentType="image/jpeg"/><Default Extension="png" ContentType="image/png"/><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>`);
+    zip.folder("_rels").file(".rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rIdDoc" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`);
+    zip.folder("word").folder("_rels").file("document.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${rels.join("")}</Relationships>`);
+    zip.folder("word").file("document.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"><w:body>${body.join("")}<w:sectPr><w:pgSz w:w="15840" w:h="8910" w:orient="landscape"/><w:pgMar w:top="360" w:right="360" w:bottom="360" w:left="360"/></w:sectPr></w:body></w:document>`);
+    const blob = await zip.generateAsync({ type: "blob" });
+    download(blob, `informe-encuesta-cohorte-${year}.docx`);
   }
   /* Qué se exporta (se pregunta antes de cada PNG, SVG o video):
      «slide» = como se ve en pantalla · «titulo» = slide + titular en Work FaAAD ·
@@ -1346,6 +1605,29 @@
   /* =================== Arranque =================== */
   // la página arranca recién después de la pantalla de acceso (js/termico/acceso.js)
   $("#tm-logout").addEventListener("click", () => TermicoAcceso.salir());
+  /* Informe del año: usa el año filtrado en la galería (o el más reciente si está en «todos»). */
+  (function reportUI() {
+    const dlg = $("#tm-report"), prog = $("#tm-report-prog"), sub = $("#tm-report-sub"), row = dlg.querySelector(".tm-ask-row");
+    let busy = false;
+    $("#tm-report-btn").addEventListener("click", () => {
+      const year = (gallery.year && gallery.year !== "todos") ? gallery.year : DatosEncuesta.years[DatosEncuesta.years.length - 1];
+      dlg.dataset.year = year; prog.hidden = true; prog.textContent = ""; row.style.opacity = "";
+      sub.textContent = `Arma un documento del año ${year}: portada + una lámina por pregunta con su gráfico. Es el resultado para descargar, no editable.`;
+      dlg.showModal();
+    });
+    async function run(fmt) {
+      if (busy) return; busy = true;
+      prog.hidden = false; prog.textContent = "Generando láminas…"; row.style.opacity = ".4";
+      const onProg = (i, n) => { prog.textContent = `Generando lámina ${i} de ${n}…`; };
+      try {
+        if (fmt === "pdf") await exportReportPDF(dlg.dataset.year, onProg); else await exportReportDOCX(dlg.dataset.year, onProg);
+        prog.textContent = "Listo: revisa tu carpeta de descargas."; setTimeout(() => dlg.close(), 1400);
+      } catch (e) { console.warn(e); prog.textContent = "No se pudo generar (revisa la conexión)."; }
+      finally { busy = false; row.style.opacity = ""; }
+    }
+    $("#tm-report-pdf").addEventListener("click", () => run("pdf"));
+    $("#tm-report-docx").addEventListener("click", () => run("docx"));
+  })();
   TermicoAcceso.listo.then(async function init() {
     resize(); renderControls();
     requestAnimationFrame(tick);

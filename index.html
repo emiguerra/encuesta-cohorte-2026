@@ -25,6 +25,7 @@
       </div>
       <input id="tm-gsearch" class="tm-g-search" type="search" placeholder="Buscar pregunta o categoría…" autocomplete="off">
       <div class="tm-group" id="tm-gyears" role="group" aria-label="Año"></div>
+      <button type="button" class="tm-btn tm-report-btn" id="tm-report-btn">↓ Informe del año</button>
       <button type="button" class="tm-btn tm-logout" id="tm-logout">Salir</button>
       <span class="tm-g-status"><span id="tm-gdot" class="lab-dot"></span><span id="tm-gstatus">Conectando con el Sheet…</span></span>
     </header>
@@ -38,6 +39,18 @@
       </ol>
     </section>
     <div id="tm-glist" class="tm-g-list"></div>
+    <dialog id="tm-report" class="tm-ask" aria-labelledby="tm-report-h">
+      <form method="dialog">
+        <p id="tm-report-h" class="tm-ask-h">Informe del año</p>
+        <p class="tm-ask-sub" id="tm-report-sub">Arma un documento con la portada y una lámina por pregunta del año, con su gráfico. No es editable: es el resultado para descargar.</p>
+        <p class="tm-report-prog" id="tm-report-prog" hidden></p>
+        <div class="tm-ask-row">
+          <button class="tm-btn" value="cancel">Cancelar</button>
+          <button type="button" class="tm-btn" id="tm-report-docx">Word (.docx)</button>
+          <button type="button" class="tm-btn" id="tm-report-pdf" autofocus>PDF</button>
+        </div>
+      </form>
+    </dialog>
   </section>
 
   <div class="lab-app">
@@ -91,6 +104,7 @@
           </div>
         </form>
       </dialog>
+      <p class="tm-enun" id="tm-enun" hidden></p>
       <div class="tm-stage-wrap" id="tm-wrap">
         <canvas id="tm-out" aria-label="Visualización de la pregunta seleccionada"></canvas>
       </div>

@@ -5,7 +5,7 @@ Sitio web con los resultados de la encuesta que responde cada cohorte al ingresa
 ## Características
 
 * Galería de todas las preguntas por año, agrupadas por familia (cada familia con su color del manual FaAAD), con una vista previa del gráfico recomendado y el dato principal de cada una.
-* Seis formas de gráfico: Espiral, Rosa, Nube, Línea, Paleta y Barras, con un efecto térmico (blur + gradiente) dibujado en WebGL.
+* Siete formas de gráfico: Espiral, Rosa, Nube, Línea, Paleta, Barras y Mapa (mapa de calor geográfico para preguntas de comuna o región), con un efecto térmico (blur + gradiente) dibujado en WebGL.
 * Cada slide se explica solo: muestra la pregunta, una línea de cómo leerla (por ejemplo, que una respuesta múltiple suma más de 100%) y la escala de la forma.
 * Comparar años: las mismas opciones de distintos años en un mismo gráfico, con un tono por año y su leyenda; y Cambio entre años (diferencia en puntos porcentuales).
 * Colores del manual FaAAD: los 11 de la paleta, elegibles como fondo, gradiente y campo; el color del texto sigue la regla de contraste del manual.
@@ -27,6 +27,9 @@ js/termico/
   sheet.js              lee una pestaña del Sheet (CSV) y la convierte en filas
   data.js               perfil de cada pregunta y su serie entre años
   gl.js                 motor WebGL: blur + gradiente de dos tonos + campo líquido
+assets/geo/
+  rm-comunas.json       polígonos de las comunas de la RM (mapa de «Comuna de residencia»)
+  cl-regiones.json      polígonos de las regiones de Chile (mapa de «Región de procedencia»)
   app.js                galería, editor, formas, animación y exportación
 assets/
   img/                  lockup FaAADudp (negro y blanco)
@@ -119,5 +122,7 @@ Ojo: como el sitio es estático, es una barrera del lado del navegador. Evita qu
 * Gráficos de red entre respuestas de una misma persona (hoy solo existen datos crudos por persona para 2025).
 
 ## Créditos
+
+Los mapas de comunas y regiones derivan de los SVG de **MiPolitico.cl** (repositorio [mapa-chile-svg](https://github.com/contacto-mipolitico-source/mapa-chile-svg), licencia MIT), convertidos a polígonos para el mapa de calor.
 
 Identidad visual y sistema gráfico según el manual de marca FaAAD / Escuela de Diseño UDP.

@@ -1,0 +1,3 @@
+Mapas geográficos (rm-comunas.json, cl-regiones.json) derivados de los SVG de
+MiPolitico.cl — repositorio contacto-mipolitico-source/mapa-chile-svg (licencia MIT).
+Convertidos de SVG a polígonos para el mapa de calor. Crédito: MiPolitico.cl.

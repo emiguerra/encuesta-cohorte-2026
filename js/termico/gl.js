@@ -42,7 +42,8 @@
      existe. Ahora el borde es solo un desvanecimiento suave del mismo color de esa zona.
      gm: 0 = color plano (A) · 1 = vertical (gp.x base → gp.y tope, en uv)
          2 = radial (centro gp.xy, radios gp.z → gp.w en unidades de alto)
-         3 = angular desde las 12 en sentido horario (centro gp.xy, recorrido total gp.z) */
+         3 = angular desde las 12 en sentido horario (centro gp.xy, recorrido total gp.z)
+         4 = por intensidad (el valor en sí): k = m, para mapas (cada zona colorea según su dato) */
   const LAYER = `precision highp float; varying vec2 uv;
     uniform sampler2D t; uniform vec3 ca, cb; uniform float gain, s1, grain, time, gm, aspect; uniform vec4 gp;
     ${NOISE}
@@ -53,7 +54,8 @@
       vec2 d = (uv - gp.xy) * vec2(aspect, 1.);
       if (gm > .5 && gm < 1.5) k = clamp((uv.y - gp.x) / (gp.y - gp.x), 0., 1.);
       else if (gm > 1.5 && gm < 2.5) k = clamp((length(d) - gp.z) / (gp.w - gp.z), 0., 1.);
-      else if (gm > 2.5) { float ang = atan(d.x, d.y); if (ang < 0.) ang += 6.2831853; k = clamp(ang / gp.z, 0., 1.); }
+      else if (gm > 2.5 && gm < 3.5) { float ang = atan(d.x, d.y); if (ang < 0.) ang += 6.2831853; k = clamp(ang / gp.z, 0., 1.); }
+      else if (gm > 3.5) k = clamp((m - gp.x) / (gp.y - gp.x), 0., 1.);  // mapa: color según el valor (intensidad de la máscara)
       vec3 col = mix(ca, cb, k) + (h(gl_FragCoord.xy + fract(time * 5.) * 57.) - .5) * grain;
       gl_FragColor = vec4(col * a, a); }`;  // premultiplicado: el halo queda limpio también sobre transparente
 

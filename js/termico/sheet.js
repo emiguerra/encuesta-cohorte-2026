@@ -31,7 +31,7 @@
     const t = parseCSV(csvText);
     const h = t[0].map(s => s.trim());
     const ix = k => h.indexOf(k);
-    const col = { fam: ix("familia"), q: ix("pregunta"), cat: ix("categoria"), v: ix("valor"), u: ix("unidad"), n: ix("n_absoluto"), nt: ix("n_total_respuestas"), rg: ix("rango_logro"), nota: ix("nota"), base: ix("pregunta_base"), cbase: ix("categoria_base") };
+    const col = { fam: ix("familia"), q: ix("pregunta"), cat: ix("categoria"), v: ix("valor"), u: ix("unidad"), n: ix("n_absoluto"), nt: ix("n_total_respuestas"), rg: ix("rango_logro"), nota: ix("nota"), base: ix("pregunta_base"), cbase: ix("categoria_base"), enun: ix("enunciado_original") };
     if (col.q < 0 || col.cat < 0 || col.v < 0) throw new Error("El Sheet no tiene las columnas pregunta/categoria/valor");
     return t.slice(1).filter(r => (r[col.q] || "").trim() !== "").map(r => ({
       familia: (r[col.fam] || "").trim(), pregunta: (r[col.q] || "").trim(), categoria: (r[col.cat] || "").trim(),
@@ -41,6 +41,8 @@
       pregunta_base: col.base < 0 ? "" : (r[col.base] || "").trim(),
       // columna opcional: liga opciones con nombre distinto entre años que son la misma respuesta (p. ej. «Ella» 2024 = «Mujer» 2026)
       categoria_base: col.cbase < 0 ? "" : (r[col.cbase] || "").trim(),
+      // columna opcional: enunciado LITERAL de la pregunta tal como se le hizo al estudiante en el formulario de ese año
+      enunciado_original: col.enun < 0 ? "" : (r[col.enun] || "").trim(),
     }));
   }
 
