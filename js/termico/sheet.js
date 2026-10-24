@@ -31,19 +31,31 @@
     const t = parseCSV(csvText);
     const h = t[0].map(s => s.trim());
     const ix = k => h.indexOf(k);
-    const col = { fam: ix("familia"), q: ix("pregunta"), cat: ix("categoria"), v: ix("valor"), u: ix("unidad"), n: ix("n_absoluto"), nt: ix("n_total_respuestas"), rg: ix("rango_logro"), nota: ix("nota"), base: ix("pregunta_base"), cbase: ix("categoria_base"), enun: ix("enunciado_original") };
+    const col = { fam: ix("familia"), q: ix("pregunta"), cat: ix("categoria"), v: ix("valor"), u: ix("unidad"), n: ix("n_absoluto"), nt: ix("n_total_respuestas"), rg: ix("rango_logro"), nota: ix("nota"), base: ix("pregunta_base"), cbase: ix("categoria_base"), enun: ix("enunciado_original"), met: ix("metrica") };
     if (col.q < 0 || col.cat < 0 || col.v < 0) throw new Error("El Sheet no tiene las columnas pregunta/categoria/valor");
-    return t.slice(1).filter(r => (r[col.q] || "").trim() !== "").map(r => ({
-      familia: (r[col.fam] || "").trim(), pregunta: (r[col.q] || "").trim(), categoria: (r[col.cat] || "").trim(),
-      valor: num(r[col.v]), unidad: (r[col.u] || "").trim(), n: num(r[col.n]), ntot: num(r[col.nt]),
-      rango: (r[col.rg] || "").trim(), nota: (r[col.nota] || "").trim(),
-      // columna opcional: liga preguntas con texto distinto entre años que miden lo mismo (ver bloque 4D del README del Sheet)
-      pregunta_base: col.base < 0 ? "" : (r[col.base] || "").trim(),
-      // columna opcional: liga opciones con nombre distinto entre años que son la misma respuesta (p. ej. «Ella» 2024 = «Mujer» 2026)
-      categoria_base: col.cbase < 0 ? "" : (r[col.cbase] || "").trim(),
-      // columna opcional: enunciado LITERAL de la pregunta tal como se le hizo al estudiante en el formulario de ese año
-      enunciado_original: col.enun < 0 ? "" : (r[col.enun] || "").trim(),
-    }));
+    // Esquema nuevo: la col «pregunta» (B) trae el enunciado REAL del formulario y la col «metrica» la etiqueta
+    // corta y única del gráfico. La plataforma agrupa/titula por esa etiqueta corta (campo `pregunta` interno) y
+    // muestra el enunciado real como subtítulo (`enunciado_original`). Esquema viejo (sin «metrica»): `pregunta`=B
+    // y el enunciado sale de la col «enunciado_original» si existe. Así el código sirve con ambos Sheets.
+    const hasMet = col.met >= 0;
+    const key = r => ((hasMet ? r[col.met] : r[col.q]) || "").trim();
+    return t.slice(1).filter(r => key(r) !== "").map(r => {
+      const preg = (r[col.q] || "").trim(), met = hasMet ? (r[col.met] || "").trim() : "";
+      return {
+        familia: (r[col.fam] || "").trim(),
+        // etiqueta corta y única del gráfico (clave de agrupación y título)
+        pregunta: hasMet ? (met || preg) : preg,
+        categoria: (r[col.cat] || "").trim(),
+        valor: num(r[col.v]), unidad: (r[col.u] || "").trim(), n: num(r[col.n]), ntot: num(r[col.nt]),
+        rango: (r[col.rg] || "").trim(), nota: (r[col.nota] || "").trim(),
+        // columna opcional: liga preguntas con texto distinto entre años que miden lo mismo (ver bloque 4D del README del Sheet)
+        pregunta_base: col.base < 0 ? "" : (r[col.base] || "").trim(),
+        // columna opcional: liga opciones con nombre distinto entre años que son la misma respuesta (p. ej. «Ella» 2024 = «Mujer» 2026)
+        categoria_base: col.cbase < 0 ? "" : (r[col.cbase] || "").trim(),
+        // enunciado LITERAL del formulario: con «metrica» es la col «pregunta»(B); sin ella, la col «enunciado_original»
+        enunciado_original: hasMet ? preg : (col.enun < 0 ? "" : (r[col.enun] || "").trim()),
+      };
+    });
   }
 
   /* ---------- Carga (con caché por pestaña y tiempo máximo de 8 s) ---------- */
