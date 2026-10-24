@@ -66,10 +66,12 @@ https://docs.google.com/spreadsheets/d/<sheetId>/gviz/tq?tqx=out:csv&sheet=<año
 Cada fila del Sheet es un dato: una categoría de una pregunta, con su valor. Las columnas se buscan por su título:
 
 ```txt
-familia | pregunta | categoria | valor | unidad | n_absoluto | n_total_respuestas | rango_logro | nota | pregunta_base | categoria_base
+familia | pregunta | categoria | valor | unidad | n_absoluto | n_total_respuestas | rango_logro | nota | pregunta_base | categoria_base | metrica
 ```
 
-Las dos últimas son opcionales y casi siempre van vacías (ver «Comparar entre años»).
+`pregunta_base` y `categoria_base` son opcionales y casi siempre van vacías (ver «Comparar entre años»).
+
+**`pregunta` vs `metrica`:** la columna `pregunta` trae el **enunciado literal** del formulario (lo que respondió el/la estudiante, ej. «¿Cuántos años tienes?»). La columna **`metrica`** trae la **etiqueta corta y única** del gráfico (ej. «Edad promedio», «Distribución etaria»). La plataforma **agrupa y titula** los gráficos por `metrica` y muestra el enunciado (`pregunta`) como subtítulo; así dos gráficos que salen de la misma pregunta (p. ej. edad promedio y distribución etaria) no colisionan. Si no existiera la columna `metrica`, el código vuelve al esquema antiguo (agrupa por `pregunta`).
 
 ## Cambiar la contraseña
 
@@ -93,7 +95,7 @@ Ojo: como el sitio es estático, es una barrera del lado del navegador. Evita qu
 ## Comparar entre años
 
 * Una pregunta se puede comparar cuando existe en 2 o más años con opciones en común. En la galería, el filtro «Comparables entre años» las muestra todas.
-* Las preguntas y opciones se emparejan por su texto exacto. Si una **pregunta** cambió de nombre entre años, se escribe el mismo texto en la columna `pregunta_base` de las filas de ambas (solo sirve si comparten las mismas opciones de respuesta).
+* Los gráficos se emparejan por `metrica` (la etiqueta corta) y las opciones por su texto exacto. Si una **métrica** se llamó distinto entre años, se escribe el mismo texto en la columna `pregunta_base` de las filas de ambas (solo sirve si comparten las mismas opciones de respuesta).
 * Si lo que cambió es el nombre de una **respuesta** (por ejemplo «Ella» en 2024 y «Mujer» en 2026), en la columna `categoria_base` de la fila del año anterior se escribe el nombre exacto que tiene en el año más reciente. Solo se unen respuestas que de verdad significan lo mismo: «Elle» (2024) y «No conforme» (2026) no se unieron.
 
 ## Problemas comunes
