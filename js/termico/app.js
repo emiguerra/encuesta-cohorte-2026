@@ -89,6 +89,9 @@
     vis: [], dom: { min: 0, max: 1 }, domT: { min: 0, max: 1 }, isPct: false, signed: false,
     meta: { title: "Elige una pregunta", crumb: "", note: "" }, message: "Cargando datos del Sheet…",
     free: "", freeByQ: {}, sub: null, ft: null, cambioYears: null, chartOnly: false,
+    // texto libre: posición del bloque en la slide (ftPos: "" = auto, o fila+columna "t/m/b"+"l/c/r")
+    // y alineación de las líneas (ftAlign: left/center/right). Se guardan por pregunta.
+    ftPos: "", ftAlign: "left", ftPosByQ: {}, ftAlignByQ: {},
   };
   /* Mapas geográficos: comunas de la RM y regiones de Chile. Cada set trae polígonos (lon/lat) y sabe
      resolver una etiqueta de dato a su forma. «Comuna de residencia» usa el de comunas; «Región de
@@ -271,6 +274,9 @@
     state.cmp = (P.kind !== "empty" && P.kind !== "mixed") ? DatosEncuesta.yearSeries(P) : null;
     if (!state.cmp && state.mode !== "valor") state.mode = "valor";
     state.free = state.freeByQ[year + "|" + pregunta] || ""; $("#tm-free").value = state.free;
+    const fk = year + "|" + pregunta;
+    state.ftPos = state.ftPosByQ[fk] || ""; state.ftAlign = state.ftAlignByQ[fk] || "left";
+    if (window._renderFtControls) window._renderFtControls();
     state.meta.title = q.pregunta;
     state.meta.enun = (q.enunciado_original || "").trim();
     state.meta.crumb = state.meta.baseCrumb = [year, q.familia].filter(Boolean).join(" · ");
@@ -360,6 +366,37 @@
   $("#tm-play").addEventListener("click", () => state.playing ? stopPlay() : startPlay());
   // texto libre: se guarda por pregunta; al escribir, el slide se rediagrama solo (ver freeLayout)
   $("#tm-free").addEventListener("input", e => { state.free = e.target.value; if (state.q) state.freeByQ[state.year + "|" + state.q] = state.free; });
+  /* Controles del texto libre: posición del bloque en la slide (grilla 3×3) y alineación de líneas.
+     El loop de dibujo (tick) redibuja solo, así que basta con actualizar el estado. */
+  (function ftControls() {
+    const box = $("#tm-free-align"); if (!box) return;
+    const mk = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+    const save = () => { if (!state.q) return; const fk = state.year + "|" + state.q; state.ftPosByQ[fk] = state.ftPos; state.ftAlignByQ[fk] = state.ftAlign; };
+
+    const grid = mk("div", "tm-fa-grid"); grid.setAttribute("role", "group"); grid.setAttribute("aria-label", "Posición del texto en la slide");
+    ["tl", "tc", "tr", "ml", "mc", "mr", "bl", "bc", "br"].forEach(p => {
+      const b = mk("button", "tm-fa-cell"); b.type = "button"; b.dataset.pos = p; b.title = "Posición " + p;
+      b.addEventListener("click", () => { state.ftPos = state.ftPos === p ? "" : p; save(); render(); });
+      grid.appendChild(b);
+    });
+    const auto = mk("button", "tm-fa-auto", "Auto"); auto.type = "button"; auto.title = "Posición automática";
+    auto.addEventListener("click", () => { state.ftPos = ""; save(); render(); });
+
+    const aln = mk("div", "tm-fa-lines"); aln.setAttribute("role", "group"); aln.setAttribute("aria-label", "Alinear líneas");
+    [["left", "Izq"], ["center", "Centro"], ["right", "Der"]].forEach(([a, t]) => {
+      const b = mk("button", "tm-fa-aln", t); b.type = "button"; b.dataset.align = a;
+      b.addEventListener("click", () => { state.ftAlign = a; save(); render(); });
+      aln.appendChild(b);
+    });
+
+    box.append(mk("span", "tm-fa-label", "Texto en la slide"), grid, auto, mk("span", "tm-fa-label", "Alinear"), aln);
+    function render() {
+      grid.querySelectorAll(".tm-fa-cell").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.pos === state.ftPos)));
+      auto.setAttribute("aria-pressed", String(!state.ftPos));
+      aln.querySelectorAll(".tm-fa-aln").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.align === (state.ftAlign || "left"))));
+    }
+    window._renderFtControls = render; render();
+  })();
   // sin fondo: quita color y campo; quedan las formas, el texto y el lockup sobre transparente (PNG/SVG/video lo respetan)
   $("#tm-nobg").addEventListener("click", () => { state.noBg = !state.noBg; renderControls(); });
 
@@ -413,14 +450,21 @@
   /* Diagramación paramétrica: el gráfico ocupa lo que dejan libre el encabezado (pregunta + cómo leer,
      state.sub), el titular (state.hl), el pie y, si hay, el texto libre (state.ft: columna a la derecha
      en 16:9, bloque abajo en 4:5 y 1:1). Todo se mide una vez por cuadro en draw(). */
-  const areaX1 = () => state.ft && state.ft.land ? state.ft.x0 - Math.min(W, H) * .05 : W - PAD();
+  const GAP = () => Math.min(W, H) * .05;
+  // el texto libre puede ser una columna (a un lado) o una banda (arriba/abajo); el gráfico toma lo que quede
+  const ftCol = side => state.ft && state.ft.mode === "col" && state.ft.side === side;
+  const ftBand = at => state.ft && state.ft.mode === "band" && state.ft.at === at;
+  const areaX0 = () => ftCol("l") ? state.ft.x0 + state.ft.w + GAP() : PAD();
+  const areaX1 = () => ftCol("r") ? state.ft.x0 - GAP() : W - PAD();
   function chartBox(radial) {
-    const pad = PAD(), top = state.sub ? state.sub.bottom + Math.min(W, H) * .03 : pad + (state.chartOnly ? 0 : Math.min(W, H) * .07);
+    const pad = PAD();
+    let top = state.sub ? state.sub.bottom + Math.min(W, H) * .03 : pad + (state.chartOnly ? 0 : Math.min(W, H) * .07);
+    if (ftBand("top")) top = Math.max(top, state.ft.y0 + state.ft.h + 16);
     // solo el gráfico: sin pie ni titular, ocupa hasta el margen inferior
     let floor = state.chartOnly ? H - pad : state.showTitle && state.hl ? state.hl.top : footerMetrics().top - 16;
-    if (state.ft && !state.ft.land) floor = Math.min(floor, state.ft.y0 - 14);
+    if (ftBand("bottom")) floor = Math.min(floor, state.ft.y0 - 14);
     const bottom = floor - (radial ? Math.min(W, H) * .04 : 30 + FS() * 1.4 + Math.min(W, H) * .02);  // cartesianas: espacio para las categorías (2 líneas) al pie
-    return { x0: pad + 30, x1: areaX1(), y0: top, y1: Math.max(top + 80, bottom) };
+    return { x0: areaX0() + 30, x1: areaX1(), y0: top, y1: Math.max(top + 80, bottom) };
   }
   function radialFrame() {
     const b = chartBox(true), pad = PAD(), cx = (pad + b.x1) / 2, cy = (b.y0 + b.y1) / 2, lo = labelsOutside();
@@ -1028,15 +1072,24 @@
       });
     }
   }
-  /* Texto libre con diagramación paramétrica: en formatos anchos ocupa una columna a la derecha y el
-     gráfico se recentra en lo que queda; en 4:5 y 1:1 va en un bloque bajo el gráfico. El tamaño de letra
-     es el mayor que cabe en ese espacio (entre ~30 px y 13 px); los saltos de línea se respetan. */
+  /* Texto libre con diagramación paramétrica. Por defecto (ftPos vacío): columna a la derecha en 16:9 y
+     bloque abajo en 4:5/1:1. Con una posición elegida (ftPos = fila t/m/b + columna l/c/r) el bloque se
+     coloca en esa zona: l/r = columna lateral (el gráfico toma el otro lado); c = banda arriba o abajo.
+     El tamaño de letra es el mayor que cabe en ese espacio; los saltos de línea se respetan. */
   function freeLayout(c) {
     const text = (state.free || "").trim();
     if (!text || state.message || state.chartOnly) return null;
-    const pad = PAD(), land = W / H >= 1.3, top = (state.sub ? state.sub.bottom : pad + 40) + Math.min(W, H) * .03;
-    const floor = (state.showTitle && state.hl ? state.hl.top : footerMetrics().top) - 18;
-    const x0 = land ? W * .64 : pad, w = land ? W - pad - x0 : W - pad * 2, maxH = land ? floor - top : H * .24;
+    const pad = PAD(), gap = Math.min(W, H) * .03, land = W / H >= 1.3;
+    const topA = (state.sub ? state.sub.bottom : pad + 40) + gap;
+    const floorA = (state.showTitle && state.hl ? state.hl.top : footerMetrics().top) - 18;
+    const leftA = pad, rightA = W - pad;
+    // posición elegida, o automática (16:9 → arriba-derecha; vertical → banda abajo)
+    const auto = !state.ftPos;
+    const vpos = auto ? (land ? "t" : "b") : state.ftPos[0];
+    const hpos = auto ? (land ? "r" : "c") : state.ftPos[1];
+    let mode, side = null, at = null, x0, w, maxH;
+    if (hpos === "l" || hpos === "r") { mode = "col"; side = hpos; w = Math.round(W * .33); x0 = side === "l" ? leftA : rightA - w; maxH = floorA - topA; }
+    else { mode = "band"; at = vpos === "t" ? "top" : "bottom"; w = rightA - leftA; x0 = leftA; maxH = H * .24; }
     // tope de tamaño: el texto libre acompaña, no compite con el titular (Work FaAAD ≥ 1/3 más grande) ni con la pregunta
     let size = Math.max(16, Math.min(W, H) * (state.showTitle ? .032 : .04)), lines = [], lh = 0;
     for (; size >= MIN_FS + 2; size *= .93) {
@@ -1047,15 +1100,24 @@
     const maxLines = Math.max(1, Math.floor(maxH / lh));
     if (lines.length > maxLines) { lines = lines.slice(0, maxLines); lines[maxLines - 1] = fitText(c, lines[maxLines - 1] + "…", w); }
     const h = lines.length * lh;
-    return { land, x0, w, size, lh, lines, y0: land ? top : floor - h };
+    let y0;
+    if (mode === "col") y0 = vpos === "t" ? topA : vpos === "b" ? floorA - h : topA + (maxH - h) / 2;
+    else y0 = at === "top" ? topA : floorA - h;
+    return { mode, side, at, x0, w, size, lh, lines, y0, h, align: state.ftAlign || "left" };
   }
   function drawFree(c, P) {
     const F = state.ft; if (!F) return;
-    c.fillStyle = P.ink; c.textAlign = "left"; c.textBaseline = "alphabetic";
+    c.fillStyle = P.ink; c.textBaseline = "alphabetic";
     c.font = `500 ${F.size}px "Work Sans"`;
+    const rl = Math.min(40, F.w * .2);   // largo del filete
+    let tx, ruleX;
+    if (F.align === "center") { c.textAlign = "center"; tx = F.x0 + F.w / 2; ruleX = tx - rl / 2; }
+    else if (F.align === "right") { c.textAlign = "right"; tx = F.x0 + F.w; ruleX = tx - rl; }
+    else { c.textAlign = "left"; tx = F.x0; ruleX = F.x0; }
     // un filete corto marca dónde empieza el texto (y lo separa del gráfico)
-    c.fillRect(F.x0, F.y0 - Math.min(W, H) * .018, Math.min(40, F.w * .2), 2);
-    F.lines.forEach((l, i) => { if (l) c.fillText(l, F.x0, F.y0 + F.size * .95 + i * F.lh); });
+    c.fillRect(ruleX, F.y0 - Math.min(W, H) * .018, rl, 2);
+    F.lines.forEach((l, i) => { if (l) c.fillText(l, tx, F.y0 + F.size * .95 + i * F.lh); });
+    c.textAlign = "left";
   }
 
   // Titular a tamaño de afiche: máx. 3 líneas y máx. ~30% del alto, la 2da línea con sangría; se apoya sobre el pie
@@ -1168,7 +1230,7 @@
   const SNAP_W = 960, SNAP_H = 540;
   const snap = document.createElement("canvas"); snap.width = SNAP_W; snap.height = SNAP_H;
   const snapCtx = snap.getContext("2d");
-  const SNAP_KEYS = ["year", "q", "P", "cmp", "mode", "form", "vis", "dom", "domT", "isPct", "signed", "meta", "showTitle", "playing", "message", "hl", "colors", "noBg", "free", "sub", "ft", "cambioYears", "chartOnly"];
+  const SNAP_KEYS = ["year", "q", "P", "cmp", "mode", "form", "vis", "dom", "domT", "isPct", "signed", "meta", "showTitle", "playing", "message", "hl", "colors", "noBg", "free", "sub", "ft", "cambioYears", "chartOnly", "ftPos", "ftAlign"];
 
   /* En la galería cada familia de preguntas lleva su propia combinación del manual: así se reconoce
      de un vistazo a qué grupo pertenece cada tarjeta (con un solo color, todo se veía igual). */
@@ -1195,6 +1257,9 @@
       state.cmp = (state.P.kind !== "empty" && state.P.kind !== "mixed") ? DatosEncuesta.yearSeries(state.P) : null;
       if (colors) state.colors = colors;
       state.noBg = false; state.free = opts.free || ""; state.chartOnly = false;
+      const fk = year + "|" + q.pregunta;
+      state.ftPos = opts.ftPos != null ? opts.ftPos : (state.ftPosByQ[fk] || "");
+      state.ftAlign = opts.ftAlign != null ? opts.ftAlign : (state.ftAlignByQ[fk] || "left");
       state.showTitle = !!opts.title; state.playing = false; state.message = "";
       state.meta = { title: q.pregunta, crumb: [year, q.familia].filter(Boolean).join(" · "), note: "" };
       const items = buildItems();
