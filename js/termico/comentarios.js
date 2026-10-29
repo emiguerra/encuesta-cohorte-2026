@@ -82,7 +82,8 @@
     } catch (e) { console.warn("[comentarios] load", e); }
   }
   function reindex() { byChart = new Map(); all.forEach(c => { const k = key(c.anio, c.metrica); if (!byChart.has(k)) byChart.set(k, []); byChart.get(k).push(c); }); }
-  const rootsOf = (y, m) => (byChart.get(key(y, m)) || []).filter(c => !c.parent).sort((a, b) => (a.fecha < b.fecha ? -1 : 1));
+  const vivo = c => c.estado !== "Eliminado";   // los eliminados (borrado suave) se ocultan
+  const rootsOf = (y, m) => (byChart.get(key(y, m)) || []).filter(c => !c.parent && vivo(c)).sort((a, b) => (a.fecha < b.fecha ? -1 : 1));
   const openRoots = (y, m) => rootsOf(y, m).filter(c => c.estado !== "Resuelto").length;
   const totalRoots = (y, m) => rootsOf(y, m).length;
 
@@ -114,6 +115,19 @@
     const c = all.find(x => x.id === id); if (c) { c.estado = estado; c._pending = true; }
     reindex(); renderThreads(); renderPins(); decorateGallery(); updateButton();
     if (await post({ action: "resolve", id, estado })) reconcile();
+  }
+  async function deleteComment(id) {
+    const c = all.find(x => x.id === id); if (!c) return;
+    const esRaiz = !c.parent, hijas = esRaiz ? all.filter(x => x.parent === id && vivo(x)).length : 0;
+    const msg = esRaiz && hijas ? `¿Eliminar este comentario y sus ${hijas} respuesta(s)?` : "¿Eliminar este comentario?";
+    if (!window.confirm(msg)) return;
+    // borrado suave: se marca «Eliminado» (reusa la acción resolve) y se oculta; la fila queda en el Sheet
+    c.estado = "Eliminado"; c._pending = true;
+    if (esRaiz) all.forEach(x => { if (x.parent === id) { x.estado = "Eliminado"; x._pending = true; } });
+    reindex(); renderThreads(); renderPins(); decorateGallery(); updateButton();
+    await post({ action: "resolve", id, estado: "Eliminado" });
+    if (esRaiz) for (const x of all) { if (x.parent === id) await post({ action: "resolve", id: x.id, estado: "Eliminado" }); }
+    reconcile();
   }
 
   /* ---------- anclaje a un punto ---------- */
@@ -206,6 +220,8 @@
       const res = el("button", "tm-clink", c.estado === "Resuelto" ? "Reabrir" : "Resolver"); res.type = "button";
       res.addEventListener("click", () => setEstado(c.id, c.estado === "Resuelto" ? "Abierto" : "Resuelto")); acts.append(res);
     }
+    const del = el("button", "tm-clink tm-cdel", "Eliminar"); del.type = "button";
+    del.addEventListener("click", () => deleteComment(c.id)); acts.append(del);
     box.append(acts);
     return box;
   }
@@ -228,7 +244,7 @@
     roots.forEach((r, i) => {
       const thread = el("div", "tm-c-thread"); thread.dataset.id = r.id;
       thread.append(commentCard(r, false, i + 1));
-      list.filter(c => c.parent === r.id).sort((a, b) => (a.fecha < b.fecha ? -1 : 1)).forEach(rep => thread.append(commentCard(rep, true)));
+      list.filter(c => c.parent === r.id && vivo(c)).sort((a, b) => (a.fecha < b.fecha ? -1 : 1)).forEach(rep => thread.append(commentCard(rep, true)));
       listBox.append(thread);
     });
   }
