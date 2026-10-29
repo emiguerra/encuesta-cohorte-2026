@@ -111,7 +111,11 @@
   }).catch(e => console.warn("[mapa] comunas RM:", e));
   fetch("assets/geo/cl-regiones.json").then(r => r.json()).then(j => {
     GEO.region = makeSet(j.regiones, lab => {
-      const k = geoKey(lab).replace("'", "") === "ohiggins" ? "higgins" : geoKey(lab);
+      let k = geoKey(lab).replace(/'/g, "");
+      // evita falsos positivos: una opción corta como «A», «B», «C» calzaría por substring con muchas
+      // regiones (Araucanía, Atacama…). Solo etiquetas de ≥4 letras pueden ser un nombre de región.
+      if (k.length < 4) return null;
+      if (k.includes("higgins")) k = "higgins";
       return j.regiones.find(r => geoKey(r.name).includes(k)) || null;
     }, j.flat);
   }).catch(e => console.warn("[mapa] regiones Chile:", e));
