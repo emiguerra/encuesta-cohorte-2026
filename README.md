@@ -125,6 +125,14 @@ Ojo: como el sitio es estático, es una barrera del lado del navegador. Evita qu
 
 ## Créditos
 
-Los mapas de comunas y regiones derivan de los SVG de **MiPolitico.cl** (repositorio [mapa-chile-svg](https://github.com/contacto-mipolitico-source/mapa-chile-svg), licencia MIT), convertidos a polígonos para el mapa de calor.
+El mapa de **comunas de la RM** usa límites oficiales de **geoBoundaries** (gbOpen CHL ADM3, CC-BY), recortados a la RM y simplificados con mapshaper preservando la topología. El mapa de **regiones** deriva de los SVG de **MiPolitico.cl** ([mapa-chile-svg](https://github.com/contacto-mipolitico-source/mapa-chile-svg), MIT). Ver `assets/geo/CREDITOS.txt`.
 
 Identidad visual y sistema gráfico según el manual de marca FaAAD / Escuela de Diseño UDP.
+
+## Comentarios (modo tipo Drive)
+
+El dashboard tiene un botón **💬 Comentarios** en el editor: cada comentario se ancla a un gráfico (año + pregunta), con hilos (responder), estado (resolver/reabrir) y badges en la galería. Se guardan en la pestaña **COMENTARIOS** del Sheet.
+
+- **Leer** es público (gviz), igual que los datos.
+- **Escribir** necesita un Google Apps Script desplegado como *aplicación web* (un sitio estático no puede escribir en el Sheet directo). El código y los pasos están en [`js/termico/comentarios.gs`](js/termico/comentarios.gs). Tras desplegarlo, pega la URL `/exec` en `js/termico/config.js` → `commentsUrl` (el `commentsToken` debe coincidir con el `TOKEN` del script).
+- **Privacidad:** como el Sheet es de lectura pública, los comentarios (nombre + texto) quedan legibles por cualquiera con el enlace. Es feedback interno de diseño, pero tenlo presente.

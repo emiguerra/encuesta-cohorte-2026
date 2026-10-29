@@ -282,6 +282,7 @@
     state.playing = false;
     applyItems(items); replay();
     renderTree();
+    if (window.Comentarios) window.Comentarios.onChart(state.year, state.q, state.meta.enun, state.form);
   }
 
   /* ------------------------------ controles ------------------------------ */
@@ -1294,6 +1295,7 @@
     });
     if (!frag.childNodes.length) { const e = document.createElement("p"); e.className = "tm-g-hint"; e.textContent = "Ninguna pregunta coincide con la búsqueda."; frag.appendChild(e); }
     list.replaceChildren(frag);
+    if (window.Comentarios) window.Comentarios.decorateGallery();
   }
 
   function card(y, q) {
