@@ -172,8 +172,31 @@ body.view-editor .tm-gallery { display: none; }
 }
 
 /* ===================== Comentarios (modo tipo Drive) ===================== */
-.tm-comments-btn.has-open { border-color: #d8b54a; color: #f4e2a8; }
+/* botón destacado: resalta entre los demás de la barra */
+.tm-comments-btn { background: #2a2820; border-color: #d8b54a; color: #f4e2a8; font-weight: 600; }
+.tm-comments-btn:hover { background: #3a3526; border-color: #f0cf6a; color: #fff; }
+.tm-comments-btn.has-open { background: #d8b54a; border-color: #d8b54a; color: #1a1300; }
 #tm-comments[aria-pressed="true"] { background: #F4F2EA; color: #111; border-color: #F4F2EA; }
+
+/* pines sobre el lienzo */
+.tm-stage-wrap { position: relative; }
+.tm-cpins { position: absolute; inset: 0; pointer-events: none; z-index: 20; }
+.tm-cpin { position: absolute; transform: translate(-50%, -50%); min-width: 22px; height: 22px; padding: 0 4px;
+  border-radius: 999px; border: 2px solid #1a1300; background: #d8b54a; color: #1a1300; font: 700 12px var(--f-sans);
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer; pointer-events: auto;
+  box-shadow: 0 2px 6px rgba(0,0,0,.4); }
+.tm-cpin:hover { background: #f0cf6a; transform: translate(-50%, -50%) scale(1.12); }
+.tm-cpin.done { background: #9a9a94; color: #1a1a1a; }
+.tm-cpin.pending { background: transparent; border: 2px dashed #d8b54a; color: #d8b54a; pointer-events: none; animation: tmpulse 1.1s ease-in-out infinite; }
+@keyframes tmpulse { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
+
+.tm-anchor[aria-pressed="true"] { color: #f0cf6a; }
+.tm-c-num { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; border-radius: 999px;
+  background: #3a3a37; color: #cfcdc4; font: 600 10px var(--f-sans); }
+.tm-c-num.pinned { background: #d8b54a; color: #1a1300; }
+.tm-c-pinchip { font: 400 9px var(--f-mono); letter-spacing: .04em; text-transform: uppercase; color: #d8b54a; }
+.tm-c-thread.flash { animation: tmflash 1.3s ease-out; }
+@keyframes tmflash { 0% { box-shadow: 0 0 0 2px #d8b54a inset; } 100% { box-shadow: 0 0 0 0 transparent inset; } }
 
 .tm-cpanel { position: fixed; top: 0; right: 0; width: 350px; max-width: 92vw; height: 100vh; z-index: 60;
   background: #161616; border-left: 1px solid #333; display: flex; flex-direction: column;
