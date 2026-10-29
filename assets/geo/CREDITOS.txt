@@ -1,3 +1,11 @@
-Mapas geográficos (rm-comunas.json, cl-regiones.json) derivados de los SVG de
-MiPolitico.cl — repositorio contacto-mipolitico-source/mapa-chile-svg (licencia MIT).
-Convertidos de SVG a polígonos para el mapa de calor. Crédito: MiPolitico.cl.
+Mapas geográficos:
+
+- rm-comunas.json (52 comunas de la Región Metropolitana): límites comunales
+  oficiales de geoBoundaries (gbOpen, Chile ADM3), licencia CC-BY. Recortados a
+  la RM y simplificados con mapshaper preservando la topología (bordes
+  compartidos coinciden exactamente). Coordenadas en lon/lat (EPSG:4326).
+  Fuente: geoBoundaries.org — Runfola, D. et al. (2020).
+
+- cl-regiones.json (16 regiones de Chile): derivado de los SVG de MiPolitico.cl
+  — repositorio contacto-mipolitico-source/mapa-chile-svg (licencia MIT).
+  Crédito: MiPolitico.cl.

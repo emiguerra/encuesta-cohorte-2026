@@ -94,9 +94,14 @@
      resolver una etiqueta de dato a su forma. «Comuna de residencia» usa el de comunas; «Región de
      procedencia» el de regiones. Se cargan una vez. */
   const geoKey = s => (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+  // normaliza la geometría a lista de anillos: c.r = [ [ [x,y], … ], … ]. Acepta el formato antiguo
+  // (un solo anillo [ [x,y], … ]) envolviéndolo, y el nuevo multi-anillo tal cual.
   function makeSet(shapes, find, flat) {
     let lo = [Infinity, Infinity], hi = [-Infinity, -Infinity];
-    shapes.forEach(c => c.r.forEach(([x, y]) => { lo[0] = Math.min(lo[0], x); lo[1] = Math.min(lo[1], y); hi[0] = Math.max(hi[0], x); hi[1] = Math.max(hi[1], y); }));
+    shapes.forEach(c => {
+      if (c.r.length && typeof c.r[0][0] === "number") c.r = [c.r];   // un anillo → multi-anillo
+      c.r.forEach(ring => ring.forEach(([x, y]) => { lo[0] = Math.min(lo[0], x); lo[1] = Math.min(lo[1], y); hi[0] = Math.max(hi[0], x); hi[1] = Math.max(hi[1], y); }));
+    });
     return { shapes, bounds: { lo, hi, cy: (lo[1] + hi[1]) / 2 }, find, flat };
   }
   const GEO = { comuna: null, region: null };
@@ -833,7 +838,7 @@
   // el de comunas muestra toda la RM. padFrac agrega margen de contexto alrededor de las zonas con dato.
   function boundsOf(shapes, padFrac) {
     let lo = [Infinity, Infinity], hi = [-Infinity, -Infinity];
-    shapes.forEach(c => c.r.forEach(([x, y]) => { lo[0] = Math.min(lo[0], x); lo[1] = Math.min(lo[1], y); hi[0] = Math.max(hi[0], x); hi[1] = Math.max(hi[1], y); }));
+    shapes.forEach(c => c.r.forEach(ring => ring.forEach(([x, y]) => { lo[0] = Math.min(lo[0], x); lo[1] = Math.min(lo[1], y); hi[0] = Math.max(hi[0], x); hi[1] = Math.max(hi[1], y); })));
     const px = (hi[0] - lo[0]) * padFrac, py = (hi[1] - lo[1]) * padFrac;
     lo = [lo[0] - px, lo[1] - py]; hi = [hi[0] + px, hi[1] + py];
     return { lo, hi, cy: (lo[1] + hi[1]) / 2 };
@@ -859,15 +864,21 @@
                       : ((lon, lat) => [ox + (lon - gb.lo[0]) * cosLat * sc, oy + (gb.hi[1] - lat) * sc]);
     return { proj, sc };
   }
-  // traza el polígono directamente en el contexto (no usa Path2D: el exportador SVG no lo soporta)
+  // traza todos los anillos del polígono (no usa Path2D: el exportador SVG no lo soporta)
   function tracePath(c, shape, proj) {
     c.beginPath();
-    shape.r.forEach(([lon, lat], i) => { const [x, y] = proj(lon, lat); i ? c.lineTo(x, y) : c.moveTo(x, y); });
-    c.closePath();
+    shape.r.forEach(ring => {
+      ring.forEach(([lon, lat], i) => { const [x, y] = proj(lon, lat); i ? c.lineTo(x, y) : c.moveTo(x, y); });
+      c.closePath();
+    });
   }
-  function comunaCentroid(c, proj) {
-    let sx = 0, sy = 0; c.r.forEach(([lon, lat]) => { const [x, y] = proj(lon, lat); sx += x; sy += y; });
-    return [sx / c.r.length, sy / c.r.length];
+  // punto para el badge: el punto-etiqueta interior precalculado (centro visual real, no se sale de formas
+  // alargadas o cóncavas); si el set no lo trae, cae al promedio de vértices.
+  function labelPoint(c, proj) {
+    if (c.lp) return proj(c.lp[0], c.lp[1]);
+    let sx = 0, sy = 0, n = 0;
+    c.r.forEach(ring => ring.forEach(([lon, lat]) => { const [x, y] = proj(lon, lat); sx += x; sy += y; n++; }));
+    return [sx / n, sy / n];
   }
   function maskMapa(c) {
     const f = mapFrame(), { items, max, set } = mapItems();
@@ -882,13 +893,15 @@
     if (!set) { c.fillStyle = P.ink; c.textAlign = "center"; c.font = `400 14px "Work Sans"`; c.fillText("Cargando mapa…", W / 2, H / 2); return; }
     const L = mapLayout(), f = mapFrame(), fs = L.fs, max = mapItems().max;
     c.save(); c.beginPath(); c.rect(L.map.x0, L.map.y0, L.map.x1 - L.map.x0, L.map.y1 - L.map.y0); c.clip();
-    c.strokeStyle = P.grid; c.lineWidth = 1;
+    c.lineJoin = "round"; c.lineCap = "round";
+    // contexto: toda la RM con un hilo suave; los bordes ya calzan entre comunas (topología)
+    c.strokeStyle = P.grid; c.lineWidth = 0.8;
     set.shapes.forEach(com => { tracePath(c, com, f.proj); c.stroke(); });
     const ranked = [...L.withData].sort((a, b) => b.value - a.value);
-    c.strokeStyle = P.ink; c.lineWidth = 1.4;
+    c.strokeStyle = P.ink; c.lineWidth = 1.5;
     ranked.forEach(o => { tracePath(c, o.com, f.proj); c.stroke(); });
     ranked.forEach((o, i) => {
-      const [x, y] = comunaCentroid(o.com, f.proj);
+      const [x, y] = labelPoint(o.com, f.proj);
       c.fillStyle = P.ink; c.beginPath(); c.arc(x, y, Math.max(7, fs * .58), 0, Math.PI * 2); c.fill();
       c.fillStyle = P.pillInk; c.font = `600 ${fs * .7}px "Work Sans"`; c.textAlign = "center"; c.textBaseline = "middle";
       c.fillText(String(i + 1), x, y + .5);
